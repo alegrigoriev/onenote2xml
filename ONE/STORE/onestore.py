@@ -20,6 +20,32 @@ from .reader import onestore_reader
 from ..exception import UnrecognizedFileFormatException
 from ..exception import UnexpectedFileNodeException
 
+class FileDataStoreObject:
+	guidHeader = GUID("{BDE316E7-2665-4511-A4C4-8D4D0B7A9EAC}")
+	guidFooter = GUID("{71FBA722-0F79-4A0B-BB13-899256426B24}")
+
+	def __init__(self, onestore, ref):
+		reader = onestore.get_chunk(ref)
+		guidHeader = GUID().read(reader)
+		assert(guidHeader == self.guidHeader)
+		cbLength = reader.read_uint64()
+		_unused = reader.read_uint32()
+		_reserved = reader.read_uint64()
+		reader_tail = reader.extract(-16)
+		guidFooter = GUID().read(reader_tail)
+		assert(guidFooter == self.guidFooter)
+		self.FileData = reader.read_bytes(cbLength)
+		assert(reader.remaining() < 8)
+		assert(0 == (reader.length & 7))
+		return
+
+	def GetData(self):
+		return self.FileData
+
+	def dump(self, fd):
+		print(" Length=%d" % (len(self.FileData),), file=fd)
+		return
+
 class OneStoreFileHeader:
 
 	def __init__(self, fd):
@@ -92,6 +118,7 @@ class OneStoreFile:
 		self.options = options
 		self.log_file = log_file
 		self.RootObjectSpaceId = None
+		self.FileDataStoreList = None
 		self.ObjectSpaces = {}
 
 		verbose = getattr(options, 'verbose', None)
@@ -158,7 +185,13 @@ class OneStoreFile:
 				assert(node.gosid == object_space.gosid)
 				self.ObjectSpaces[node.gosid] = object_space
 			elif nid == ID.FileDataStoreListReferenceFND.value:
-				pass # TODO: read file data store list
+				assert(self.FileDataStoreList is None)
+
+				self.FileDataStoreList = {}
+				for data_node in FileNodeList(self, node.ref,
+								{ID.FileDataStoreObjectReferenceFND}):
+					self.FileDataStoreList[data_node.guidReference] = FileDataStoreObject(self, data_node.ref)
+					continue
 			elif nid == ID.ObjectSpaceManifestRootFND:
 				assert(self.RootObjectSpaceId is None)
 				self.RootObjectSpaceId = node.gosidRoot
@@ -187,6 +220,9 @@ class OneStoreFile:
 	def GetRootObjectSpaceId(self):
 		return self.RootObjectSpaceId
 
+	def GetDataStoreObjectData(self, guid):
+		return self.FileDataStoreList.get(guid, None).GetData()
+
 	@staticmethod
 	def open(filename, options, log_file=None)->OneStoreFile:
 		with open(filename, 'rb') as fd:
@@ -205,4 +241,8 @@ class OneStoreFile:
 			for gosid, space in self.ObjectSpaces.items():
 				print("\nObjectSpaceID=%s" % (gosid,), file=fd)
 				space.dump(fd, verbose)
+		if getattr(verbose, 'dump_file_data_store', False) and self.FileDataStoreList is not None:
+			for extguid, file_data in self.FileDataStoreList.items():
+				print("File data object:", extguid, file=fd)
+				file_data.dump(fd)
 		return
