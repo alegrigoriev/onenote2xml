@@ -18,6 +18,7 @@ from ..exception import UnexpectedFileNodeException
 from .property_set import ObjectSpaceObjectPropSet
 from .filenode import FileNodeID as ID
 from .global_id_table import GlobalIdTable
+from .file_data_object import FileDataObject
 from .filenode_list import FileNodeList
 
 ID_ObjectGroupStartFND = ID.ObjectGroupStartFND.value
@@ -73,7 +74,11 @@ class ObjectGroup:
 			elif nid == ID_ObjectDeclarationFileData3RefCountFND \
 			  or nid == ID_ObjectDeclarationFileData3LargeRefCountFND:
 				assert(node.jcid.IsFileData())
-				# TODO: Read the file data object
+				oid = self.global_id_table[node.coid]
+				obj = FileDataObject(onestore, node)
+				node.data_store_object = obj
+				# Note that all definitions of an object with same ID must have identical data
+				revision.AddObject(oid, obj)
 				continue
 			elif nid == ID_ObjectGroupEndFND:
 				break

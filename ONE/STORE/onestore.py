@@ -190,7 +190,9 @@ class OneStoreFile:
 				self.FileDataStoreList = {}
 				for data_node in FileNodeList(self, node.ref,
 								{ID.FileDataStoreObjectReferenceFND}):
-					self.FileDataStoreList[data_node.guidReference] = FileDataStoreObject(self, data_node.ref)
+					data_store_object = FileDataStoreObject(self, data_node.ref)
+					self.FileDataStoreList[data_node.guidReference] = data_store_object
+					node.data_store_object = data_store_object
 					continue
 			elif nid == ID.ObjectSpaceManifestRootFND:
 				assert(self.RootObjectSpaceId is None)

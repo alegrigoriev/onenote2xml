@@ -56,6 +56,10 @@ This module defines basic classes for property types per PropertyTypeId,
 and provides a factory function `PropertyFactory` to construct a blank instance of the property class.
 `read()` method is then invoked by `ObjectSpaceObjectPropSet` function, which reads or constructs the rest of the property contents.
 
+## `file_data_object.py`
+
+This module exports class `FileDataObject` which encapsulated payload of ObjectDeclarationFileData3RefCountFND structure.
+
 # ONESTORE format{#ONESTORE}
 
 The most current format is used for `.one` files. `.onetoc2` (Notebook Table Of Contents) files uses a legacy format.
