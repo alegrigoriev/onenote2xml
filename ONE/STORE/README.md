@@ -29,6 +29,11 @@ and the chunk reference for the file list.
 
 This module exports `GlobalIdTable` class, which builds a table from a sequence of file nodes, for mapping `CompactId` indices to 128 bit GUIDs.
 
+## `object_group.py`
+
+This module exports class `ObjectGroup`, which parses a group of objects,
+referred by ObjectGroupListReferenceFND structure. An object group is used by `.one` files.
+
 # ONESTORE format{#ONESTORE}
 
 The most current format is used for `.one` files. `.onetoc2` (Notebook Table Of Contents) files uses a legacy format.

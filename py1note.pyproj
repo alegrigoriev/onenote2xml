@@ -28,6 +28,7 @@
     <Compile Include="ONE\STORE\filenode.py" />
     <Compile Include="ONE\STORE\filenode_list.py" />
     <Compile Include="ONE\STORE\global_id_table.py" />
+    <Compile Include="ONE\STORE\object_group.py" />
     <Compile Include="ONE\STORE\onestore.py" />
     <Compile Include="ONE\STORE\reader.py" />
   </ItemGroup>
