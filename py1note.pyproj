@@ -43,11 +43,15 @@
     <Compile Include="ONE\STORE\reader.py" />
     <Compile Include="ONE\STORE\revision_manifest_list.py" />
     <Compile Include="ONE\STORE\property.py" />
+    <Compile Include="ONE\XML\xml_tree_builder.py" />
+    <Compile Include="ONE\XML\property_element_factory.py" />
+    <Compile Include="ONE\XML\property_set_element_factory.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ONE\" />
     <Folder Include="ONE\NOTE\" />
     <Folder Include="ONE\STORE\" />
+    <Folder Include="ONE\XML\" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.10" />
@@ -57,6 +61,7 @@
     <Content Include="ONE\NOTE\README.md" />
     <Content Include="ONE\README.md" />
     <Content Include="ONE\STORE\README.md" />
+    <Content Include="ONE\XML\README.md" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
