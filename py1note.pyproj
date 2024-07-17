@@ -32,6 +32,7 @@
     <Compile Include="ONE\STORE\object_space.py" />
     <Compile Include="ONE\STORE\onestore.py" />
     <Compile Include="ONE\STORE\reader.py" />
+    <Compile Include="ONE\STORE\revision_manifest_list.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ONE\" />

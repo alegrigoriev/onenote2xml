@@ -13,16 +13,19 @@
 #   limitations under the License.
 #
 
+from typing import Iterable
 from ..base_types import ExGUID, NULL_ExGUID
 from ..exception import UnexpectedFileNodeException
 from .filenode import FileNodeID
 from .filenode_list import FileNodeList
+from .revision_manifest_list import RevisionManifestList, RevisionManifest
 
 ID_ObjectSpaceManifestListStartFND = FileNodeID.ObjectSpaceManifestListStartFND.value
 ID_RevisionManifestListReferenceFND = FileNodeID.RevisionManifestListReferenceFND.value
 
 class ObjectSpace:
 	def __init__(self, onestore, ref):
+		self.revisions = {}
 
 		manifest_ref = None
 		node_iter = FileNodeList(onestore, ref,
@@ -48,8 +51,25 @@ class ObjectSpace:
 		if manifest_ref is None:
 			raise UnexpectedFileNodeException("Missing ManifestListReference in Object Space NodeList")
 
+		# RevisionManifestList also calls SetContext() to pass context information by the side
+		for revision in RevisionManifestList(self, onestore, manifest_ref):
+			self.revisions[revision.rid] = revision
+
+		if not self.revisions:
+			raise UnexpectedFileNodeException("No revisions in Revision Manifest List")
+
 		return
 
+	def GetRevisionIds(self)->Iterable[ExGUID]:
+		return self.revisions.keys()
+
+	def GetRevision(self, rid)->RevisionManifest:
+		return self.revisions.get(rid, None)
+
 	def dump(self, fd):
+		for revision in self.revisions.values():
+			revision.dump(fd)
+		for (gctxid, role), rid in self.contexts.items():
+			print("Context %s:%d->revision %s" % (gctxid, role, rid), file=fd)
 
 		return

@@ -39,6 +39,12 @@ referred by ObjectGroupListReferenceFND structure. An object group is used by `.
 This module exports class `ObjectSpace`,
 which invokes loading of a single revision manifest list (which is a sequence of revision manifests).
 
+## `revision_manifest_list.py`
+
+This module exports a function `RevisionManifestList`, called by `ObjectSpace`,
+which parses a file node list containing a sequence of revision manifests,
+each represented by class `RevisionManifest`.
+
 # ONESTORE format{#ONESTORE}
 
 The most current format is used for `.one` files. `.onetoc2` (Notebook Table Of Contents) files uses a legacy format.
