@@ -124,7 +124,7 @@ class OneStoreFile:
 		verbose = getattr(options, 'verbose', None)
 		if verbose is None:
 			verbose = SimpleNamespace()
-		if getattr(verbose, 'dump_nodelists', False):
+		if getattr(verbose, 'dump_nodelists', False) and not getattr(options, 'raw', False):
 			from ..property_id import PropertyID
 			from ..property_set_jcid import PropertySetJCID
 			verbose.pretty_prop_type=PropertyID

@@ -26,6 +26,8 @@ def main():
 	parser = argparse.ArgumentParser(description='Parse Microsoft OneNote files.', allow_abbrev=False)
 	parser.add_argument("onefile", metavar='<onefile>', help="Source '.one' or '.onetoc2' Microsoft OneNote file")
 	parser.add_argument("--log", '-L', metavar='<log file>', help="Log file")
+	parser.add_argument("--raw", '-w', action="store_true",
+						help="Load as a raw MS-ONESTORE file, do not decode MS-ONE file structure")
 
 	options = parser.parse_args()
 
@@ -43,7 +45,10 @@ def main():
 	else:
 		log_file = None
 
-	from ONE.STORE.onestore import OneStoreFile as One
+	if options.raw:
+		from ONE.STORE.onestore import OneStoreFile as One
+	else:
+		from ONE.NOTE.onenote import OneNote as One
 	print("Loading file %s..." % (options.onefile,), file=sys.stderr, end='', flush=True)
 	onefile = One.open(options.onefile, options, log_file=log_file)
 	print("done", file=sys.stderr)

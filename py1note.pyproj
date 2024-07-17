@@ -23,6 +23,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="parse1note.py" />
+    <Compile Include="ONE\NOTE\onenote.py" />
     <Compile Include="ONE\base_types.py" />
     <Compile Include="ONE\exception.py" />
     <Compile Include="ONE\property_id.py" />
@@ -42,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ONE\" />
+    <Folder Include="ONE\NOTE\" />
     <Folder Include="ONE\STORE\" />
   </ItemGroup>
   <ItemGroup>
@@ -49,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="README.md" />
+    <Content Include="ONE\NOTE\README.md" />
     <Content Include="ONE\README.md" />
     <Content Include="ONE\STORE\README.md" />
   </ItemGroup>

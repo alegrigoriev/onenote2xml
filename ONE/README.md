@@ -5,6 +5,9 @@ This namespace contains the following child namespaces:
 - [STORE/](STORE/README.md) - modules to support parsing of
 [[MS-ONESTORE]](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-onestore/ae670cd2-4b38-4b24-82d1-87cfb2cc3725)
 file format;
+- [NOTE/](NOTE/README.md) - parsing of
+Microsoft [ONE](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-one/73d22548-a613-4350-8c23-07d15576be50)
+file structure;
 
 and basic support modules:
 `property_set_jcid.py`,
