@@ -53,6 +53,8 @@ def main():
 	onefile = One.open(options.onefile, options, log_file=log_file)
 	print("done", file=sys.stderr)
 
+	onefile.MakeObjectTree()
+
 	if log_file is not None:
 		onefile.dump(log_file, options.verbose)
 		log_file.close()

@@ -40,6 +40,19 @@ class OneNote:
 	def __exit__(self, exception_type, exception_value, exception_traceback):
 		return False
 
+	def GetDefaultTreeBuilder(self, options):
+		from ..NOTE.object_tree_builder import ObjectTreeBuilder
+		tree_builder = ObjectTreeBuilder(onestore=self.onestore,
+			property_set_factory=self.GetPropertySetFactory(), options=options)
+
+		return tree_builder
+
+	def MakeObjectTree(self, options=None):
+		builder = self.GetDefaultTreeBuilder(options)
+		if self.log_file is not None:
+			builder.dump(self.log_file, self.options.verbose)
+		return builder
+
 	def dump(self, fd, verbose=None):
 		self.onestore.dump(fd, verbose)
 		return
@@ -60,6 +73,10 @@ class OneNotebookSection(OneNote):
 		assert (not self.onestore.IsNotebookToc2())
 		return False
 
+	def GetPropertySetFactory(self):
+		from .property_set_object_factory import OneNotebookPropertySetFactory as property_set_factory
+		return property_set_factory
+
 class OneNotebookToc2(OneNote):
 
 	def IsNotebookSection(self):
@@ -70,3 +87,6 @@ class OneNotebookToc2(OneNote):
 		assert (self.onestore.IsNotebookToc2())
 		return True
 
+	def GetPropertySetFactory(self):
+		from .property_set_object_factory import OneToc2PropertySetFactory as property_set_factory
+		return property_set_factory

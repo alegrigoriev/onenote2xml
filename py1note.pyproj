@@ -29,6 +29,9 @@
     <Compile Include="ONE\property_id.py" />
     <Compile Include="ONE\property_pretty_print.py" />
     <Compile Include="ONE\property_set_jcid.py" />
+    <Compile Include="ONE\NOTE\object_tree_builder.py" />
+    <Compile Include="ONE\NOTE\property_object_factory.py" />
+    <Compile Include="ONE\NOTE\property_set_object_factory.py" />
     <Compile Include="ONE\STORE\filenode.py" />
     <Compile Include="ONE\STORE\filenode_list.py" />
     <Compile Include="ONE\STORE\file_data_object.py" />
