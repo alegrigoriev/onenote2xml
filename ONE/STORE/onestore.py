@@ -91,6 +91,7 @@ class OneStoreFile:
 		self.options = options
 		self.log_file = log_file
 		self.RootObjectSpaceId = None
+		self.ObjectSpaces = {}
 
 		self.header = OneStoreFileHeader(onestore_reader(data, 1024, 0))
 
@@ -140,7 +141,10 @@ class OneStoreFile:
 		for node in FileNodeList(self, header.fcrFileNodeListRoot, allowed_nodes):
 			nid = node.ID
 			if nid == ID.ObjectSpaceManifestListReferenceFND:
-				pass # TODO: read object spaces
+				from .object_space import ObjectSpace
+				object_space = ObjectSpace(self, node.ref)
+				assert(node.gosid == object_space.gosid)
+				self.ObjectSpaces[node.gosid] = object_space
 			elif nid == ID.FileDataStoreListReferenceFND.value:
 				pass # TODO: read file data store list
 			elif nid == ID.ObjectSpaceManifestRootFND:
@@ -150,6 +154,7 @@ class OneStoreFile:
 			continue
 
 		assert(self.RootObjectSpaceId is not None)
+		assert(len(self.ObjectSpaces) != 0)
 		return
 
 	def IsNotebookSection(self):
@@ -160,6 +165,12 @@ class OneStoreFile:
 
 	def get_chunk(self, chunk_ref:FileNodeChunkReference)->onestore_reader:
 		return onestore_reader(self.data, chunk_ref.cb, chunk_ref.stp)
+
+	def GetObjectSpaces(self):
+		return self.ObjectSpaces.keys()
+
+	def GetObjectSpace(self, osid:ExGUID):
+		return self.ObjectSpaces.get(osid, None)
 
 	def GetRootObjectSpaceId(self):
 		return self.RootObjectSpaceId
@@ -178,4 +189,7 @@ class OneStoreFile:
 	def dump(self, fd):
 		self.header.dump(fd)
 		print("\nRootObjectSpaceId=%s" % (self.RootObjectSpaceId,), file=fd)
+		for gosid, space in self.ObjectSpaces.items():
+			print("\nObjectSpaceID=%s" % (gosid,), file=fd)
+			space.dump(fd)
 		return

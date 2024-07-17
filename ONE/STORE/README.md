@@ -34,6 +34,11 @@ This module exports `GlobalIdTable` class, which builds a table from a sequence 
 This module exports class `ObjectGroup`, which parses a group of objects,
 referred by ObjectGroupListReferenceFND structure. An object group is used by `.one` files.
 
+## `object_space.py`
+
+This module exports class `ObjectSpace`,
+which invokes loading of a single revision manifest list (which is a sequence of revision manifests).
+
 # ONESTORE format{#ONESTORE}
 
 The most current format is used for `.one` files. `.onetoc2` (Notebook Table Of Contents) files uses a legacy format.
