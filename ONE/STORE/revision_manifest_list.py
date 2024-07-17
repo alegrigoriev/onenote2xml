@@ -233,8 +233,29 @@ class RevisionManifest:
 	def getExtguidByCompactID(self, compact_id:CompactID):
 		return self.global_id_table[compact_id]
 
-	def AddObject(self, oid, obj):
+	def AddObject(self, oid, obj, md5Hash=None):
 		obj.oid = oid
+		if not obj.jcid.IsReadOnly():
+			self.objects[oid] = obj
+			return
+
+		# See if there is a previous object with same ID:
+		prev_obj = self.GetObjectById(oid)
+		if prev_obj is not None:
+			# compare data
+			assert(prev_obj.jcid.IsReadOnly())
+			assert(obj.raw_data == prev_obj.raw_data)
+			# The object is also put in this revision object table
+		# md5Hash never matches, perhaps Microsoft uses a strange flavor of it (without appending length with padding?)
+		elif False and md5Hash is not None:
+			from hashlib import md5
+			obj_hash = md5(obj.raw_data, usedforsecurity=False)
+			# Pad the data to multiple of 8?
+			for _ in range(7 & -len(obj.raw_data)):
+				obj_hash.update(b'\0')
+			digest = obj_hash.digest()
+			assert(digest == md5Hash)
+
 		self.objects[oid] = obj
 		return
 

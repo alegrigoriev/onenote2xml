@@ -28,10 +28,11 @@ class PropertySet:
 	The total size of rgData MUST be zero if no property in a rgPrids array specifies that it contains data in the rgData field.
 	'''
 
-	def __init__(self, jcid:JCID):
+	def __init__(self, jcid:JCID, raw_data:bytes=None):
 		self.properties = {}
 		self.jcid = jcid
 		self.oid = None
+		self.raw_data = raw_data  # for read-only objects only, to verify they're immutable
 		return
 
 	def read(self, reader, iterObjectIDs, iterObjectSpaceIDs, iterContextIDs):
@@ -181,8 +182,12 @@ def ObjectSpaceObjectPropSet(onestore:OneStoreFile, ref, jcid, global_id_table):
 	'''
 
 	reader = onestore.get_chunk(ref)
+	if jcid.IsReadOnly():
+		raw_data = reader.read_bytes_at(0, ref.cb)
+	else:
+		raw_data = None
 
-	property_set = PropertySet(jcid)
+	property_set = PropertySet(jcid, raw_data)
 
 	OIDs = ObjectSpaceObjectStreamOfOIDs(reader, global_id_table)
 	iterObjectIDs = iter(OIDs)

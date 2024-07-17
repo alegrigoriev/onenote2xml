@@ -89,7 +89,7 @@ class ObjectGroup:
 			oid = self.global_id_table[node.body.coid]
 			obj = ObjectSpaceObjectPropSet(onestore, node.BlobRef, node.body.jcid, self.global_id_table)
 			node.prop_set = obj
-			revision.AddObject(oid, obj)
+			revision.AddObject(oid, obj, node.md5Hash)
 			continue
 		else:
 			raise UnexpectedFileNodeException("Missing file node ObjectGroupEndFND in Object Group %s NodeList" % (self.ObjectGroupID))
