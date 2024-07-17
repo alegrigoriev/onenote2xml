@@ -1,0 +1,7 @@
+__pycache__
+UpgradeLog*.htm
+*.user
+test/data
+venv/
+env/
+*.one*

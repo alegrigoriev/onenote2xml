@@ -1,0 +1,5 @@
+*.sh	text eol=lf
+*.bat	text eol=crlf
+*.py	text
+*.md	text whitespace=-trailing-space
+*.editorconfig text
