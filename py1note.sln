@@ -1,0 +1,21 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35005.142
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "py1note", "py1note.pyproj", "{7BBD1F14-7A89-442B-991B-F63C8EA992DC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		parse1note|Any CPU = parse1note|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7BBD1F14-7A89-442B-991B-F63C8EA992DC}.parse1note|Any CPU.ActiveCfg = parse1note|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {46881AC5-6554-4AE3-9A31-64814AEE1F4F}
+	EndGlobalSection
+EndGlobal

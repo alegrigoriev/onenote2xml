@@ -7,3 +7,8 @@ file format.
 ## `reader.py`
 
 This module defines class `onestore_reader` which provides sequential reading of data items of various types from the a chunk of the source file.
+
+## `onestore.py`
+
+This module provides class `OneStoreFile` which encapsulates functionality for parsing the upper level of the MS-ONESTORE file format,
+and invoking the rest of function to parse the complete structure.
