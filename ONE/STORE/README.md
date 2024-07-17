@@ -25,6 +25,10 @@ It also defines classes for each of file node structures, and exports `FileNodeF
 This module exports `FileNodeList` function, which works as a filenode object generator, given the `onestore` instance,
 and the chunk reference for the file list.
 
+## `global_id_table.py`
+
+This module exports `GlobalIdTable` class, which builds a table from a sequence of file nodes, for mapping `CompactId` indices to 128 bit GUIDs.
+
 # ONESTORE format{#ONESTORE}
 
 The most current format is used for `.one` files. `.onetoc2` (Notebook Table Of Contents) files uses a legacy format.
