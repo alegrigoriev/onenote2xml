@@ -44,6 +44,7 @@ def main():
 						help="Generate a snapshot of a revision with this timestamp")
 	parser.add_argument("--incremental", '-i', action="store_true",
 						help="Generate revisions in incremental form")
+	parser.add_argument("--recurse", '-r', action="store_true", help="Include child notebooks for .onetoc2 file")
 
 	options = parser.parse_args()
 
@@ -64,14 +65,17 @@ def main():
 	onenote = OneNote.open(options.onefile, options, log_file)
 	print("done", file=sys.stderr)
 
+	if options.recurse and not onenote.IsNotebookToc2():
+		raise OneException("--recurse option only applicable to .onetoc2 file")
+
 	if options.output:
 		print("Making JSON file %s..." % (options.output,), file=sys.stderr, end='', flush=True)
 		onenote.MakeJsonFile(options.output, options)
 		print("done", file=sys.stderr)
 
 	if options.output_dir:
-		if onenote.IsNotebookToc2():
-			raise OneException("'--output-directory' option not applicable to .onetoc2 file")
+		if onenote.IsNotebookToc2() and not options.recurse:
+			raise OneException("'--output-directory' option only applicable to .onetoc2 file with --recurse")
 		print("Making JSON revisions in %s..." % (options.output_dir,), file=sys.stderr)
 		onenote.MakeJsonRevisions(options.output_dir, options)
 		print("done", file=sys.stderr)

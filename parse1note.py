@@ -30,6 +30,7 @@ def main():
 						help="Load as a raw MS-ONESTORE file, do not decode MS-ONE file structure")
 	parser.add_argument("--list-revisions", '-l', action="store_true",
 						help="List all revisions to the standard output")
+	parser.add_argument("--recurse", '-r', action="store_true", help="Include child notebooks for .onetoc2 file")
 
 	options = parser.parse_args()
 
@@ -56,6 +57,9 @@ def main():
 	print("done", file=sys.stderr)
 
 	onefile.MakeObjectTree()
+
+	if options.recurse and not onefile.IsNotebookToc2():
+		raise OneException("The file needs to be .onetoc2 for --recurse option")
 
 	if options.list_revisions:
 		onefile.PrintVersions(sys.stdout, human_friendly=False)

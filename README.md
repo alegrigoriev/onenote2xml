@@ -137,3 +137,13 @@ By default, in absence of `--all-revisions` option, the most recent revision sna
 `--incremental` (`-i`) option modifies `--output-directory` with `--all-revisions` behavior,
 making it to write only modified files to the version directories.
 Without this option, each version directory contains the full snapshot of the whole OneNote section.
+
+`--recurse` (`-r`)
+- for an `.onetoc2` file (notebook table of contents - TOC) builds the file(s) for all section files of the notebook,
+referred by the TOC.
+
+	If it's given with `--output` option, all sections are included as subtrees of a single XML or JSON file. 
+
+	If it's given with `--output-directory` option, all sections are generated as subdirectories of the target directory.
+
+	The output can be a single revision, or all revisions, if `--all-revisions` command line option is given.

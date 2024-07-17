@@ -169,6 +169,18 @@ class OneNotebookSection(OneNote):
 class OneNotebookToc2(OneNote):
 	ROOT_NODE_NAME = "NotebookToc2"
 
+	def LoadNotebooks(self):
+		if not self.onestore.IsToc():
+			return
+
+		object_tree = self.onestore.GetObjectTree(role=1)
+
+		# They're usually already sorted
+		notebooks = sorted(object_tree.TOCEntryIndex_OidIndex, key=lambda t:t.NotebookElementOrderingID)
+		for entry in notebooks:
+			...
+		return
+
 	def IsNotebookSection(self):
 		assert (not self.onestore.IsNotebookSection())
 		return False
