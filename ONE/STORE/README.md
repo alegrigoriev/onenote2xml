@@ -15,6 +15,16 @@ This module defines class `onestore_reader` which provides sequential reading of
 This module provides class `OneStoreFile` which encapsulates functionality for parsing the upper level of the MS-ONESTORE file format,
 and invoking the rest of function to parse the complete structure.
 
+## `filenode.py`
+
+This module provides IntEnum subclass `FileNodeID` which declares codes for file node types.
+It also defines classes for each of file node structures, and exports `FileNodeFactory` function to read and build file node objects.
+
+## `filenode_list.py`
+
+This module exports `FileNodeList` function, which works as a filenode object generator, given the `onestore` instance,
+and the chunk reference for the file list.
+
 # ONESTORE format{#ONESTORE}
 
 The most current format is used for `.one` files. `.onetoc2` (Notebook Table Of Contents) files uses a legacy format.
