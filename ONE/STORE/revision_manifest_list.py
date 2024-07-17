@@ -117,6 +117,9 @@ def RevisionManifestList(obj_space, onestore, ref):
 				nid != ID_RevisionRoleAndContextDeclarationFND:
 			raise UnexpectedFileNodeException("Unexpected file node %s in Revision Manifest NodeList" % (node.ID,))
 
+		# revision Context ID:
+		gctxid = getattr(node, 'gctxid', NULL_ExGUID)
+		obj_space.SetContext(node.rid, gctxid, node.RevisionRole)
 		continue
 
 	return
@@ -223,9 +226,6 @@ class RevisionManifest:
 
 	def GetRootObjectId(self, role:int=ROOT_ROLE_CONTENTS):
 		return self.root_objects.get(role, None)
-
-	def GetRootObject(self, role:int=1):
-		return self.GetObjectById(self.GetRootObjectId(role))
 
 	def GetRootObjectRoles(self):
 		return self.root_objects.keys()

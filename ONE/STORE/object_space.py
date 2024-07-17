@@ -24,7 +24,12 @@ ID_ObjectSpaceManifestListStartFND = FileNodeID.ObjectSpaceManifestListStartFND.
 ID_RevisionManifestListReferenceFND = FileNodeID.RevisionManifestListReferenceFND.value
 
 class ObjectSpace:
+	REVISION_ROLE_DEFAULT = 1
+
 	def __init__(self, onestore, ref):
+		# Key: (gctxid, role)
+		# When referenced by ContextId only, the role 1 is used
+		self.contexts = {}
 		self.revisions = {}
 
 		manifest_ref = None
@@ -65,6 +70,21 @@ class ObjectSpace:
 
 	def GetRevision(self, rid)->RevisionManifest:
 		return self.revisions.get(rid, None)
+
+	def GetDefaultContextRevisionId(self):
+		return self.GetContextRevisionId(NULL_ExGUID, self.REVISION_ROLE_DEFAULT)
+
+	def GetContextRevisionId(self, ctxid, role=REVISION_ROLE_DEFAULT):
+		return self.contexts.get((ctxid, role), None)
+
+	def GetContextLabels(self):
+		return self.contexts.items()
+
+	# Called from RevisionManifestList to pass context information by the side
+	def SetContext(self, rid, context_id:ExGUID, revision_role:int):
+		key = (context_id, revision_role)
+		self.contexts[key] = rid
+		return
 
 	def dump(self, fd):
 		for revision in self.revisions.values():
