@@ -9,6 +9,7 @@ file format;
 Microsoft [ONE](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-one/73d22548-a613-4350-8c23-07d15576be50)
 file structure;
 - [XML/](XML/README.md) - modules for building XML element tree from OneNote files;
+- [JSON/](JSON/README.md) - modules for building a JSON object tree from OneNote files;
 
 and basic support modules:
 `property_set_jcid.py`,

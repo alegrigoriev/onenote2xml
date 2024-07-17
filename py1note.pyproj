@@ -30,6 +30,9 @@
   <ItemGroup>
     <Compile Include="1note2xml.py" />
     <Compile Include="parse1note.py" />
+    <Compile Include="ONE\JSON\json_property_factory.py" />
+    <Compile Include="ONE\JSON\json_property_set_factory.py" />
+    <Compile Include="ONE\JSON\json_tree_builder.py" />
     <Compile Include="ONE\NOTE\onenote.py" />
     <Compile Include="ONE\base_types.py" />
     <Compile Include="ONE\exception.py" />
@@ -59,6 +62,7 @@
     <Folder Include="ONE\NOTE\" />
     <Folder Include="ONE\STORE\" />
     <Folder Include="ONE\XML\" />
+    <Folder Include="ONE\JSON\" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.10" />
@@ -69,6 +73,7 @@
     <Content Include="ONE\README.md" />
     <Content Include="ONE\STORE\README.md" />
     <Content Include="ONE\XML\README.md" />
+    <Content Include="ONE\JSON\README.md" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
