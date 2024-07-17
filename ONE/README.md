@@ -8,12 +8,17 @@ file format;
 
 and basic support modules:
 `property_set_jcid.py`,
+`property_id.py`,
 `exception.py`,
 and `base_types.py`.
 
 ## `property_set_jcid.py`
 
 This module contains definitions of object IDs (JCID).
+
+## `property_id.py`
+
+This module contains definitions of property IDs.
 
 ## `exception.py`
 

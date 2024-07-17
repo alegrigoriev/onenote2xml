@@ -50,6 +50,12 @@ each represented by class `RevisionManifest`.
 This module exports function `ObjectSpaceObjectPropSet` which reads a property set object structure from the file,
 at the position and size given by `ref` argument.
 
+## `property.py`
+
+This module defines basic classes for property types per PropertyTypeId,
+and provides a factory function `PropertyFactory` to construct a blank instance of the property class.
+`read()` method is then invoked by `ObjectSpaceObjectPropSet` function, which reads or constructs the rest of the property contents.
+
 # ONESTORE format{#ONESTORE}
 
 The most current format is used for `.one` files. `.onetoc2` (Notebook Table Of Contents) files uses a legacy format.

@@ -14,6 +14,7 @@
 #
 
 from ..base_types import *
+from .property import PropertyFactory
 
 class PropertySet:
 	'''
@@ -31,6 +32,17 @@ class PropertySet:
 		self.properties = {}
 		self.jcid = jcid
 		self.oid = None
+		return
+
+	def read(self, reader, iterObjectIDs, iterObjectSpaceIDs, iterContextIDs):
+		cProperties = reader.read_uint16()
+		prop_ids_reader = reader.extract(4*cProperties)
+		for _ in range(cProperties):
+			prop_id = prop_ids_reader.read_uint32()
+			_property = PropertyFactory(prop_id)
+			_property.read(reader, iterObjectIDs, iterObjectSpaceIDs, iterContextIDs)
+			self.properties[_property.key] = _property
+			continue
 		return
 
 	def Properties(self):
@@ -173,9 +185,19 @@ def ObjectSpaceObjectPropSet(onestore:OneStoreFile, ref, jcid, global_id_table):
 	property_set = PropertySet(jcid)
 
 	OIDs = ObjectSpaceObjectStreamOfOIDs(reader, global_id_table)
+	iterObjectIDs = iter(OIDs)
 	if not OIDs.OsidStreamNotPresent:
 		OSIDs = ObjectSpaceObjectStreamOfOSIDs(reader, global_id_table)
+		iterObjectSpaceIDs = iter(OSIDs)
 		if OSIDs.ExtendedStreamsPresent:
 			ContextIDs = ObjectSpaceObjectStreamOfContextIDs(reader, global_id_table)
+			iterContextIDs = iter(ContextIDs)
+		else:
+			iterContextIDs = None
+	else:
+		iterObjectSpaceIDs = None
+		iterContextIDs = None
+
+	property_set.read(reader, iterObjectIDs, iterObjectSpaceIDs, iterContextIDs)
 
 	return property_set

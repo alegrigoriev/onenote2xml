@@ -25,6 +25,7 @@
     <Compile Include="parse1note.py" />
     <Compile Include="ONE\base_types.py" />
     <Compile Include="ONE\exception.py" />
+    <Compile Include="ONE\property_id.py" />
     <Compile Include="ONE\property_set_jcid.py" />
     <Compile Include="ONE\STORE\filenode.py" />
     <Compile Include="ONE\STORE\filenode_list.py" />
@@ -35,6 +36,7 @@
     <Compile Include="ONE\STORE\property_set.py" />
     <Compile Include="ONE\STORE\reader.py" />
     <Compile Include="ONE\STORE\revision_manifest_list.py" />
+    <Compile Include="ONE\STORE\property.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ONE\" />
