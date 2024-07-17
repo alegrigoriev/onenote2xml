@@ -17,6 +17,7 @@ from __future__ import annotations
 from ..base_types import *
 from .reader import onestore_reader
 from ..exception import UnrecognizedFileFormatException
+from ..exception import UnexpectedFileNodeException
 
 class OneStoreFileHeader:
 
@@ -89,6 +90,7 @@ class OneStoreFile:
 		self.data = data
 		self.options = options
 		self.log_file = log_file
+		self.RootObjectSpaceId = None
 
 		self.header = OneStoreFileHeader(onestore_reader(data, 1024, 0))
 
@@ -99,6 +101,55 @@ class OneStoreFile:
 		else:
 			raise UnrecognizedFileFormatException("Unrecognised guidFileType: %s" % (self.header.guidFileType,))
 
+		try:
+			self.ReadRootFileNodeList(self.header)
+		except UnexpectedFileNodeException as e:
+			if self.IsNotebookSection():
+				e.args = (str(e) + ' in ".one" file',)
+			elif self.IsNotebookToc2():
+				e.args = (str(e) + ' in ".onetoc2" file',)
+			raise
+		return
+
+	def ReadRootFileNodeList(self, header):
+		'''The root file node list is a file node list (section 2.4)
+		that specifies the set of all object spaces (section 2.1.4) contained in this file.
+		It also specifies which object space is the root.
+		The root file node list MUST begin with the FileNodeListFragment structure (section 2.4.1)
+		specified by the Header.fcrFileNodeListRoot field (section 2.3.1).
+		The root file node list MUST consist of the following FileNode structures (section 2.4.3),
+		and MUST NOT contain any others:
+		- One or more FileNode structures with FileNodeID field values equal to 0x008
+		  (ObjectSpaceManifestListReferenceFND structure, section 2.5.2).
+		- One FileNode structure with a FileNodeID field value equal to 0x004
+		  (ObjectSpaceManifestRootFND structure, section 2.5.1).
+		- Zero or one FileNode structure with FileNodeID field values equal to 0x090
+		  (FileDataStoreListReferenceFND structure, section 2.5.21).
+		'''
+
+		from .filenode import FileNodeID as ID
+		from .filenode_list import FileNodeList
+
+		allowed_nodes= {
+			ID.ObjectSpaceManifestListReferenceFND.value,
+			ID.ObjectSpaceManifestRootFND.value,
+		}
+		if self.IsNotebookSection():
+			allowed_nodes.add(ID.FileDataStoreListReferenceFND.value)
+
+		for node in FileNodeList(self, header.fcrFileNodeListRoot, allowed_nodes):
+			nid = node.ID
+			if nid == ID.ObjectSpaceManifestListReferenceFND:
+				pass # TODO: read object spaces
+			elif nid == ID.FileDataStoreListReferenceFND.value:
+				pass # TODO: read file data store list
+			elif nid == ID.ObjectSpaceManifestRootFND:
+				assert(self.RootObjectSpaceId is None)
+				self.RootObjectSpaceId = node.gosidRoot
+			# FileNodeList will raise UnexpectedFileNodeException if any other node ID is read
+			continue
+
+		assert(self.RootObjectSpaceId is not None)
 		return
 
 	def IsNotebookSection(self):
@@ -109,6 +160,9 @@ class OneStoreFile:
 
 	def get_chunk(self, chunk_ref:FileNodeChunkReference)->onestore_reader:
 		return onestore_reader(self.data, chunk_ref.cb, chunk_ref.stp)
+
+	def GetRootObjectSpaceId(self):
+		return self.RootObjectSpaceId
 
 	@staticmethod
 	def open(filename, options, log_file=None)->OneStoreFile:
@@ -123,4 +177,5 @@ class OneStoreFile:
 
 	def dump(self, fd):
 		self.header.dump(fd)
+		print("\nRootObjectSpaceId=%s" % (self.RootObjectSpaceId,), file=fd)
 		return
