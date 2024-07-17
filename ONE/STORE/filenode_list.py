@@ -61,8 +61,9 @@ def FileNodeList(onestore, ChunkReference, allowed_nodes:set=None):
 		verbose = None
 
 	prev_header = None
+	MaxNodes = 1
 
-	while not ChunkReference.isNil():
+	while not ChunkReference.isNil() and MaxNodes > 0:
 		reader = onestore.get_chunk(ChunkReference)
 
 		header = FileNodeListHeader(reader)
@@ -71,6 +72,14 @@ def FileNodeList(onestore, ChunkReference, allowed_nodes:set=None):
 			assert(header.nFragmentSequence == prev_header.nFragmentSequence+1)
 		else:
 			assert(header.nFragmentSequence == 0)
+			if verbose is not None and MaxNodes != 0xFFFFFFFF:
+				print("\nFileNodeListID: %X" % (header.FileNodeListID,), file=onestore.log_file)
+			# It appears that the transaction log in the current OneNote version
+			# is not getting updated and must be ignored
+
+			MaxNodes = onestore.FileListCounts.get(header.FileNodeListID, 0xFFFFFFFF)
+			if verbose is not None and MaxNodes != 0xFFFFFFFF:
+				print("MaxNodes: %d" % (MaxNodes,), file=onestore.log_file)
 
 		prev_header = header
 
@@ -79,7 +88,7 @@ def FileNodeList(onestore, ChunkReference, allowed_nodes:set=None):
 		footer = tail_reader.read_uint64()
 		assert(footer == 0x8BC215C38233BA4B)
 
-		while reader.remaining() >= 4:
+		while reader.remaining() >= 4 and MaxNodes > 0:
 			file_node = FileNodeFactory(reader, allowed_nodes)
 			if file_node is None:
 				# Invalid data begun
@@ -90,6 +99,8 @@ def FileNodeList(onestore, ChunkReference, allowed_nodes:set=None):
 				if verbose is not None:
 					file_node.dump(onestore.log_file, verbose)
 				break
+			# MaxNodes doesn't include the final ChunkTerminatorFND
+			MaxNodes -= 1
 
 			try:
 				yield file_node

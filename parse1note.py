@@ -31,6 +31,9 @@ def main():
 	parser.add_argument("--list-revisions", '-l', action="store_true",
 						help="List all revisions to the standard output")
 	parser.add_argument("--recurse", '-r', action="store_true", help="Include child notebooks for .onetoc2 file")
+	parser.add_argument("--use-transaction-log", action="store_true",
+		help="Use list counts stored in the transaction log (DEPRECATED)."
+			" The transaction log appears broken and produces a broken structure")
 
 	options = parser.parse_args()
 

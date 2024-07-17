@@ -142,6 +142,12 @@ class OneStoreFile:
 		else:
 			raise UnrecognizedFileFormatException("Unrecognised guidFileType: %s" % (self.header.guidFileType,))
 
+		self.FileListCounts = {}
+
+		# A transaction log has been found inconsistent. We'll ignore it by default.
+		if getattr(options, 'use_transaction_log', False):
+			self.parseTransactionLog(self.header.fcrTransactionLog, self.header.cTransactionsInLog)
+
 		try:
 			self.ReadRootFileNodeList(self.header)
 		except UnexpectedFileNodeException as e:
@@ -236,6 +242,26 @@ class OneStoreFile:
 		data = path.read_bytes()
 		self.OnefileDir[filename] = data
 		return data
+
+	def parseTransactionLog(self, fcrTransactionLog, cTransactionsInLog):
+		reader = self.get_chunk(fcrTransactionLog)
+		while cTransactionsInLog:
+			srcID = reader.read_uint32()
+			TransactionEntrySwitch = reader.read_uint32()
+			if srcID == 0x00000001:
+				# Sentinel switch
+				# TransactionEntrySwitch is a CRC
+				reader = reader.extract(-12)
+				fcrTransactionLog = FileChunkReference64x32(reader)
+				reader = self.get_chunk(fcrTransactionLog)
+				# Need to decrement cTransactionsInLog?
+				continue
+
+			self.FileListCounts[srcID] = TransactionEntrySwitch
+			cTransactionsInLog -= 1
+			continue
+
+		return
 
 	@staticmethod
 	def open(filename, options, log_file=None)->OneStoreFile:
