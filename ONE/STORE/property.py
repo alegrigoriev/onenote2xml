@@ -32,9 +32,18 @@ class Property:
 	def read(self, reader, *args):
 		return self
 
-	def dump(self, fd):
+	def get_property_name(self, verbose):
+		prop_type = getattr(verbose, 'pretty_prop_type', None)
+		if prop_type is not None:
+			try:
+				return prop_type(self.property_id).name
+			except ValueError:
+				pass
+		return self.key_string
+
+	def dump(self, fd, verbose=None):
 		if self.display_value is not None:
-			print("%s=%s" % (self.key_string, str(self.display_value)), file=fd)
+			print("%s=%s" % (self.get_property_name(verbose), str(self.display_value)), file=fd)
 
 		return
 
@@ -82,8 +91,8 @@ class ObjectIDProperty(Property):
 		self.str_value = [str(oid)]
 		return self
 
-	def dump(self, fd):
-		print("%s=OID:%s" % (self.key_string, self.str_value[0]), file=fd)
+	def dump(self, fd, verbose=None):
+		print("%s=OID: %s" % (self.get_property_name(verbose), self.str_value[0]), file=fd)
 		return
 
 class ArrayOfObjectIDsProperty(Property):
@@ -99,8 +108,8 @@ class ArrayOfObjectIDsProperty(Property):
 			self.str_value.append(str(oid))
 		return self
 
-	def dump(self, fd):
-		print("%s: Array of %d OIDs:" % (self.key_string, len(self.value)), file=fd)
+	def dump(self, fd, verbose=None):
+		print("%s: Array of %d OIDs:" % (self.get_property_name(verbose), len(self.value)), file=fd)
 		for oid_str in self.str_value:
 			print("   ", oid_str, file=fd)
 		return
@@ -114,8 +123,8 @@ class ObjectSpaceIDProperty(Property):
 		self.str_value = [str(osid)]
 		return self
 
-	def dump(self, fd):
-		print("%s=OSID: %s" % (self.key_string, self.str_value[0]), file=fd)
+	def dump(self, fd, verbose=None):
+		print("%s=OSID: %s" % (self.get_property_name(verbose), self.str_value[0]), file=fd)
 		return
 
 class ArrayOfObjectSpaceIDsProperty(Property):
@@ -131,8 +140,8 @@ class ArrayOfObjectSpaceIDsProperty(Property):
 			self.str_value.append(str(osid))
 		return self
 
-	def dump(self, fd):
-		print("%s: Array of %d OSIDs:" % (self.key_string, len(self.data)), file=fd)
+	def dump(self, fd, verbose=None):
+		print("%s: Array of %d OSIDs:" % (self.get_property_name(verbose), len(self.data)), file=fd)
 		for osid_str in self.str_value:
 			print("   ", osid_str, file=fd)
 		return
@@ -146,8 +155,8 @@ class ContextIDProperty(Property):
 		self.str_value = [str(ctxid)]
 		return self
 
-	def dump(self, fd):
-		print("%s=CTXID: %s" % (self.key_string, self.str_value[0]), file=fd)
+	def dump(self, fd, verbose=None):
+		print("%s=CTXID: %s" % (self.get_property_name(verbose), self.str_value[0]), file=fd)
 		return
 
 class ArrayOfContextIDsProperty(Property):
@@ -163,8 +172,8 @@ class ArrayOfContextIDsProperty(Property):
 			self.str_value.append(str(ctxid))
 		return self
 
-	def dump(self, fd):
-		print("%s: Array of %d CTXIDs:" % (self.key_string, len(self.data)), file=fd)
+	def dump(self, fd, verbose=None):
+		print("%s: Array of %d CTXIDs:" % (self.get_property_name(verbose), len(self.data)), file=fd)
 		for ctxid_str in self.str_value:
 			print("   ", ctxid_str, file=fd)
 		return
@@ -179,8 +188,8 @@ class PropertySetProperty(Property):
 		self.value = [property_set]
 		return self
 
-	def dump(self, fd):
-		print("%s: PropertySet" % (self.key_string,), file=fd)
+	def dump(self, fd, verbose=None):
+		print("%s: PropertySet" % (self.get_property_name(verbose),), file=fd)
 		self.value[0].dump(fd, verbose)
 		return
 
@@ -201,8 +210,8 @@ class ArrayOfPropertyValuesProperty(Property):
 			self.value.append(property_set)
 		return self
 
-	def dump(self, fd):
-		print("%s: ArrayOfPropertyValues" % (self.key_string,), file=fd)
+	def dump(self, fd, verbose=None):
+		print("%s: ArrayOfPropertyValues" % (self.get_property_name(verbose),), file=fd)
 		for propset in self.value:
 			propset.dump(fd, verbose)
 		return

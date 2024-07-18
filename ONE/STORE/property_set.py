@@ -49,13 +49,23 @@ class PropertySet:
 	def Properties(self):
 		return self.properties.values()
 
-	def dump(self, fd):
+	def dump(self, fd, verbose=None):
 		if self.oid is not None:
 			print("OID: %s" % (self.oid,), file=fd)
 
-		print("JCID: %06X" % (self.jcid.jcid,), file=fd)
+		jcid_type = getattr(verbose, 'pretty_jcid_type', None)
+		jcid = self.jcid.jcid
+		if jcid_type is not None:
+			try:
+				jcid_str = jcid_type(self.jcid.jcid).name
+			except ValueError:
+				jcid_str = "%06X" % (jcid,)
+		else:
+			jcid_str = "%06X" % (jcid,)
+		print("JCID: %s" % (jcid_str,), file=fd)
+
 		for _property in self.Properties():
-			_property.dump(fd)
+			_property.dump(fd, verbose)
 		return
 
 class ObjectSpaceObjectStreamHeader:
