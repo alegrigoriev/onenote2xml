@@ -35,6 +35,7 @@ def main():
 		from types import SimpleNamespace
 
 		verbose = SimpleNamespace()
+		verbose.dump_nodelists = True
 		verbose.dump_object_spaces = False
 		verbose.dump_file_data_store = True
 

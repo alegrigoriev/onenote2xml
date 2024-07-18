@@ -78,7 +78,7 @@ class FileNode:
 	def __init__(self, reader:onestore_reader):
 		return
 
-	def dump(self, fd):
+	def dump(self, fd, verbose=None):
 		print("\n%s (0x%03X)" % (self.ID.name, self.ID.value), file=fd)
 		return
 
@@ -95,6 +95,11 @@ class ObjectSpaceManifestRootFND(FileNode):
 		self.gosidRoot = ExGUID().read(reader)
 		return
 
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" Root GOSID: %s" % (self.gosidRoot,), file=fd)
+		return
+
 class ObjectSpaceManifestListReferenceFND(FileNode2):
 	ID = FileNodeID.ObjectSpaceManifestListReferenceFND
 
@@ -103,11 +108,21 @@ class ObjectSpaceManifestListReferenceFND(FileNode2):
 		self.gosid = ExGUID().read(reader)
 		return
 
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" GOSID: %s" % (self.gosid,), file=fd)
+		return
+
 class ObjectSpaceManifestListStartFND(FileNode):
 	ID = FileNodeID.ObjectSpaceManifestListStartFND
 
 	def __init__(self, reader:onestore_reader):
 		self.gosidRoot = ExGUID().read(reader)
+		return
+
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" GOSID: %s" % (self.gosidRoot,), file=fd)
 		return
 
 class RevisionManifestListReferenceFND(FileNode2):
@@ -125,6 +140,13 @@ class RevisionManifestListStartFND(FileNode):
 		self.nInstance = reader.read_uint32()	# always ignored
 		return
 
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" Revision GOSID: %s" % (self.gosidRoot,), file=fd)
+		if self.nInstance:
+			print(" nInstance: %s" % (self.nInstance,), file=fd)
+		return
+
 class RevisionManifestStart4FND(FileNode):
 	ID = FileNodeID.RevisionManifestStart4FND
 
@@ -134,6 +156,18 @@ class RevisionManifestStart4FND(FileNode):
 		self.timeCreation = reader.read_uint64()	# always ignored
 		self.RevisionRole = reader.read_uint32()
 		self.odcsDefault = reader.read_uint16()	# always ignored
+		return
+
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" RID: %s" % (self.rid,), file=fd)
+		if self.ridDependent != NULL_ExGUID:
+			print("Depends on:%s" % (self.ridDependent,), file=fd)
+		print(" RevisionRole: %x" % (self.RevisionRole,), file=fd)
+		if self.timeCreation:
+			print(" timeCreation: %s" % (GetFiletime64Datetime(self.timeCreation),), file=fd)
+		if self.odcsDefault:
+			print(" odcsDefault: %x" % (self.odcsDefault,), file=fd)
 		return
 
 class RevisionManifestStart6FND(FileNode):
@@ -148,12 +182,26 @@ class RevisionManifestStart6FND(FileNode):
 		self.odcsDefault = reader.read_uint16()
 		return
 
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" RID: %s" % (self.rid,), file=fd)
+		if self.ridDependent != NULL_ExGUID:
+			print(" Depends on:%s" % (self.ridDependent,), file=fd)
+		print(" RevisionRole: %x" % (self.RevisionRole,), file=fd)
+		print(" odcsDefault: %x" % (self.odcsDefault,), file=fd)
+		return
+
 class RevisionManifestStart7FND(RevisionManifestStart6FND):
 	ID = FileNodeID.RevisionManifestStart7FND
 
 	def __init__(self, reader):
 		super().__init__(reader)
 		self.gctxid = ExGUID().read(reader)
+		return
+
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" CTXID: %s" % (self.gctxid,), file=fd)
 		return
 
 class GlobalIdTableStartFNDX(FileNode):
@@ -171,12 +219,22 @@ class GlobalIdTableEntryFNDX(FileNode):
 		self.guid = GUID().read(reader)
 		return
 
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" %d:%s" % (self.index, self.guid), file=fd)
+		return
+
 class GlobalIdTableEntry2FNDX(FileNode):
 	ID = FileNodeID.GlobalIdTableEntry2FNDX
 
 	def __init__(self, reader:onestore_reader):
 		self.iIndexMapFrom = reader.read_uint32()
 		self.iIndexMapTo = reader.read_uint32()
+		return
+
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" Map: %d->%d" % (self.iIndexMapFrom, self.iIndexMapTo), file=fd)
 		return
 
 class GlobalIdTableEntry3FNDX(FileNode):
@@ -186,6 +244,11 @@ class GlobalIdTableEntry3FNDX(FileNode):
 		self.iIndexCopyFromStart = reader.read_uint32()
 		self.cEntriesToCopy = reader.read_uint32()
 		self.iIndexCopyToStart = reader.read_uint32()
+		return
+
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" Map: %d->%d (%d entries)" % (self.iIndexCopyFromStart, self.iIndexCopyToStart, self.cEntriesToCopy), file=fd)
 		return
 
 class ObjectRevisionWithRefCountFNDX(FileNode1):
@@ -203,7 +266,18 @@ class ObjectRevisionWithRefCountFNDX(FileNode1):
 		# Object's JCID is inherited from the existing definition
 		return
 
-class ObjectRevisionWithRefCount2FNDX(FileNode1):
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		if self.jcid is not None:
+			print(" JCID: %06X" % (self.jcid.jcid,), file=fd)
+		print(" CompactID: %s" % (self.coid,), file=fd)
+		print(" cRef: %d" % (self.cRef,), file=fd)
+
+		if self.prop_set is not None:
+			self.prop_set.dump(fd, verbose)
+		return
+
+class ObjectRevisionWithRefCount2FNDX(ObjectRevisionWithRefCountFNDX):
 	ID = FileNodeID.ObjectRevisionWithRefCount2FNDX
 
 	def __init__(self, reader, ref):
@@ -225,12 +299,24 @@ class RootObjectReference2FNDX(FileNode):
 		self.RootRole = reader.read_uint32()
 		return
 
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" Root CompactID: %s" % (self.coidRoot,), file=fd)
+		print(" Root Role: %d" % (self.RootRole,), file=fd)
+		return
+
 class RootObjectReference3FND(FileNode):
 	ID = FileNodeID.RootObjectReference3FND
 
 	def __init__(self, reader:onestore_reader):
 		self.oidRoot = ExGUID().read(reader)
 		self.RootRole = reader.read_uint32()
+		return
+
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" Root OID: %s" % (self.oidRoot,), file=fd)
+		print(" Root Role: %d" % (self.RootRole,), file=fd)
 		return
 
 class RevisionRoleDeclarationFND(FileNode):
@@ -241,12 +327,23 @@ class RevisionRoleDeclarationFND(FileNode):
 		self.RevisionRole = reader.read_uint32()
 		return
 
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" RID: %s" % (self.rid,), file=fd)
+		print(" RevisionRole: %d" % (self.RevisionRole,), file=fd)
+		return
+
 class RevisionRoleAndContextDeclarationFND(RevisionRoleDeclarationFND):
 	ID = FileNodeID.RevisionRoleAndContextDeclarationFND
 
 	def __init__(self, reader):
 		super().__init__(reader)
 		self.gctxid = ExGUID().read(reader)
+		return
+
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" CTXID: %s" % (self.gctxid,), file=fd)
 		return
 
 class ObjectDataEncryptionKeyV2FNDX(FileNode1):
@@ -314,6 +411,13 @@ class FileDataStoreObjectReferenceFND(FileNode1):
 		self.data_store_object = None
 		return
 
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" GUID: %s" % (self.guidReference,), file=fd)
+		if self.data_store_object is not None:
+			self.data_store_object.dump(fd, verbose)
+		return
+
 class ObjectDeclarationWithRefCountBody:
 
 	def __init__(self, reader:onestore_reader):
@@ -335,6 +439,13 @@ class ObjectDeclarationWithRefCountBody:
 		self.fHasOsidReferences = (w & 2) != 0
 		return
 
+	def dump(self, fd, verbose=None):
+		print(" JCID: %06X" % (self.jcid.jcid,), file=fd)
+		print(" CompactID: %s" % (self.coid,), file=fd)
+		if self.odcs:
+			print(" odcs: %d" % (self.odcs,), file=fd)
+		return
+
 class ObjectDeclarationWithRefCountFNDX(FileNode1):
 	ID = FileNodeID.ObjectDeclarationWithRefCountFNDX
 	cRefReadFunc = onestore_reader.read_uint8
@@ -344,6 +455,14 @@ class ObjectDeclarationWithRefCountFNDX(FileNode1):
 		self.body = ObjectDeclarationWithRefCountBody(reader)
 		self.cRef = type(self).cRefReadFunc(reader)
 		self.prop_set = None
+		return
+
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		self.body.dump(fd, verbose)
+		print(" cRef: %d" % (self.cRef,), file=fd)
+		if self.prop_set is not None:
+			self.prop_set.dump(fd, verbose)
 		return
 
 class ObjectDeclarationWithRefCount2FNDX(ObjectDeclarationWithRefCountFNDX):
@@ -358,6 +477,11 @@ class HashedChunkDescriptor2FND(FileNode1):
 		self.guidHash = GUID().read(reader)
 		return
 
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" guidHash: %s" % (self.guidHash,), file=fd)
+		return
+
 class ObjectDeclaration2Body:
 
 	def __init__(self, reader:onestore_reader):
@@ -367,6 +491,11 @@ class ObjectDeclaration2Body:
 		w = reader.read_uint8()
 		self.fHasOidReferences = (w & 1) != 0
 		self.fHasOsidReferences = (w & 2) != 0
+		return
+
+	def dump(self, fd, verbose=None):
+		print(" JCID: %06X" % (self.jcid.jcid,), file=fd)
+		print(" CompactID: %s" % (self.coid,), file=fd)
 		return
 
 class ObjectDeclaration2RefCountFND(FileNode1):
@@ -379,6 +508,16 @@ class ObjectDeclaration2RefCountFND(FileNode1):
 		self.cRef = type(self).cRefReadFunc(reader)
 		self.md5Hash = None
 		self.prop_set = None
+		return
+
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		self.body.dump(fd, verbose)
+		print(" cRef: %d" % (self.cRef,), file=fd)
+		if self.md5Hash is not None:
+			print(" MD5HASH: %s" % (self.md5Hash.hex(),), file=fd)
+		if self.prop_set is not None:
+			self.prop_set.dump(fd, verbose)
 		return
 
 class ObjectDeclaration2LargeRefCountFND(ObjectDeclaration2RefCountFND):
@@ -412,6 +551,19 @@ class ObjectDeclarationFileData3RefCountFND(FileNode):
 		self.Extension = StringInStorageBuffer(reader)
 		return
 
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" JCID: %06X" % (self.jcid.jcid,), file=fd)
+		print(" CompactID: %s" % (self.coid,), file=fd)
+		print(" cRef: %d" % (self.cRef,), file=fd)
+
+		if self.data_store_object is not None:
+			self.data_store_object.dump(fd, verbose)
+		else:
+			print(" FileData: %s" % (self.FileDataReference,), file=fd)
+			print(" Extension: %s" % (self.Extension,), file=fd)
+		return
+
 class ObjectDeclarationFileData3LargeRefCountFND(ObjectDeclarationFileData3RefCountFND):
 	ID = FileNodeID.ObjectDeclarationFileData3LargeRefCountFND
 	cRefReadFunc = onestore_reader.read_uint32
@@ -424,6 +576,11 @@ class ObjectGroupListReferenceFND(FileNode2):
 		self.ObjectGroupID = ExGUID().read(reader)
 		return
 
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" OGID: %s" % (self.ObjectGroupID,), file=fd)
+		return
+
 class ObjectGroupStartFND(FileNode):
 	ID = FileNodeID.ObjectGroupStartFND
 
@@ -431,11 +588,21 @@ class ObjectGroupStartFND(FileNode):
 		self.ogid = ExGUID().read(reader)
 		return
 
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" OGID: %s" % (self.ogid,), file=fd)
+		return
+
 class DataSignatureGroupDefinitionFND(FileNode):
 	ID = FileNodeID.DataSignatureGroupDefinitionFND
 
 	def __init__(self, reader:onestore_reader):
 		self.DataSignatureGroup = ExGUID().read(reader)
+		return
+
+	def dump(self, fd, verbose=None):
+		super().dump(fd, verbose)
+		print(" DataSignatureGroup: %s" % (self.DataSignatureGroup,), file=fd)
 		return
 
 class RevisionManifestEndFND(FileNode):

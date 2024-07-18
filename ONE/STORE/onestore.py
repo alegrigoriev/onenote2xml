@@ -97,11 +97,11 @@ class OneStoreFile:
 		verbose = getattr(options, 'verbose', None)
 		if verbose is None:
 			verbose = SimpleNamespace()
-
-		from ..property_id import PropertyID
-		from ..property_set_jcid import PropertySetJCID
-		verbose.pretty_prop_type=PropertyID
-		verbose.pretty_jcid_type=PropertySetJCID
+		if getattr(verbose, 'dump_nodelists', False):
+			from ..property_id import PropertyID
+			from ..property_set_jcid import PropertySetJCID
+			verbose.pretty_prop_type=PropertyID
+			verbose.pretty_jcid_type=PropertySetJCID
 		self.verbose = verbose
 
 		self.header = OneStoreFileHeader(onestore_reader(data, 1024, 0))

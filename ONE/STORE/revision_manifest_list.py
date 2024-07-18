@@ -278,7 +278,9 @@ class RevisionManifest:
 		for object_group in self.object_groups.values():
 			object_group.dump(fd, verbose)
 
-		for extid, obj in self.objects.items():
-			print("\nObjectID:", str(extid), file=fd)
-			obj.dump(fd, verbose)
+		if not getattr(verbose, 'dump_nodelists', False):
+			for extid, obj in self.objects.items():
+				print("\nObjectID:", str(extid), file=fd)
+				obj.dump(fd, verbose)
+		# else the objects will be dumped along the filenodes
 		return
