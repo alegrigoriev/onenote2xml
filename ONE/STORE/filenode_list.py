@@ -56,6 +56,10 @@ def FileNodeList(onestore, ChunkReference, allowed_nodes:set=None):
 	footer (8 bytes): An unsigned integer; MUST be "0x8BC215C38233BA4B". Specifies the end of the FileNodeListFragment structure.
 	'''
 
+	verbose = onestore.verbose
+	if not getattr(verbose, 'dump_nodelists', False):
+		verbose = None
+
 	prev_header = None
 
 	while not ChunkReference.isNil():
@@ -83,9 +87,17 @@ def FileNodeList(onestore, ChunkReference, allowed_nodes:set=None):
 
 			if file_node.ID == FileNodeID.ChunkTerminatorFND.value:
 				assert(not ChunkReference.isNil())
+				if verbose is not None:
+					file_node.dump(onestore.log_file, verbose)
 				break
 
-			yield file_node
+			try:
+				yield file_node
+			finally:
+				# Dump the last read node even if an exception is thrown.
+				# Also, the 'finally' block is executed if the consumer stops reading and the generator gets deleted.
+				if verbose is not None:
+					file_node.dump(onestore.log_file, verbose)
 			# Some file lists are terminated by their own end node ID,
 			# and may have an invalid garbage after it.
 			# We can't read ahead, or read all nodes in advance
