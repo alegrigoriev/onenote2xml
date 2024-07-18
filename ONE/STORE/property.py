@@ -41,9 +41,19 @@ class Property:
 				pass
 		return self.key_string
 
+	def get_pretty_print_string(self, verbose):
+		if not getattr(verbose, 'pretty_print_properties', False):
+			return self.display_value
+
+		from ..property_pretty_print import PropertyPrettyPrintString
+		pretty_str = PropertyPrettyPrintString(self, verbose)
+		if pretty_str is not None:
+			return pretty_str
+		return self.display_value
+
 	def dump(self, fd, verbose=None):
-		if self.display_value is not None:
-			print("%s=%s" % (self.get_property_name(verbose), str(self.display_value)), file=fd)
+		print("%s=%s" % (self.get_property_name(verbose),
+					self.get_pretty_print_string(verbose)), file=fd)
 
 		return
 

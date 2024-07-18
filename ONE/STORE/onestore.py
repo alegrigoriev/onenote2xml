@@ -102,6 +102,7 @@ class OneStoreFile:
 			from ..property_set_jcid import PropertySetJCID
 			verbose.pretty_prop_type=PropertyID
 			verbose.pretty_jcid_type=PropertySetJCID
+			verbose.pretty_print_properties = True
 		self.verbose = verbose
 
 		self.header = OneStoreFileHeader(onestore_reader(data, 1024, 0))
