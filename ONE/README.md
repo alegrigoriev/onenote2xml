@@ -9,6 +9,7 @@ file format;
 and basic support modules:
 `property_set_jcid.py`,
 `property_id.py`,
+`property_pretty_print.py`,
 `exception.py`,
 and `base_types.py`.
 
@@ -19,6 +20,10 @@ This module contains definitions of object IDs (JCID).
 ## `property_id.py`
 
 This module contains definitions of property IDs.
+
+## `property_pretty_print.py`
+
+This module contains functions and a factory function to make human-readable strings from property data.
 
 ## `exception.py`
 
