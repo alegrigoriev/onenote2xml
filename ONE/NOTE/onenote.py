@@ -111,6 +111,26 @@ class OneNote:
 	def IsNotebookToc2(self):
 		return self.onestore.IsNotebookToc2()
 
+	def GetVersions(self):
+		return self.GetDefaultTreeBuilder().GetVersions()
+
+	def PrintVersions(self, fd, human_friendly=True):
+		for version in self.GetVersions():
+
+			if human_friendly:
+				print("Edited at %s by %s" % (
+					GetFiletime64Datetime(version.LastModifiedTimeStamp),
+					version.Author,
+					), file=fd)
+			else:
+				print("%d %d\t%s" % (
+					version.LastModifiedTimeStamp,
+					Filetime64ToUnixTimestamp(version.LastModifiedTimeStamp),
+					version.Author,
+					), file=fd)
+
+		return
+
 class OneNotebookSection(OneNote):
 	ROOT_NODE_NAME = "NotebookSection"
 

@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 from typing import Iterable
+from types import SimpleNamespace
 from ..base_types import *
 from ..exception import CircularObjectReferenceException, ObjectNotFoundException
 from ..STORE.revision_manifest_list import RevisionManifest
@@ -49,6 +50,7 @@ class RevisionBuilderCtx:
 
 		self.revision_roles = {}
 		self.obj_dict = {}
+		self.page_persistent_guid:GUID = None
 
 		# Build all roles
 		for role in self.revision.GetRootObjectRoles():
@@ -58,6 +60,8 @@ class RevisionBuilderCtx:
 
 			if role == self.ROOT_ROLE_REVISION_METADATA:
 				self.last_modified_timestamp = getattr(root_obj, 'LastModifiedTimeStamp', self.last_modified_timestamp)
+			elif role == self.ROOT_ROLE_PAGE_METADATA:
+				self.page_persistent_guid = str(getattr(root_obj, 'NotebookManagementEntityGuid', self.page_persistent_guid))
 			elif role == self.ROOT_ROLE_CONTENTS:
 				if root_obj._jcid_name == 'jcidSectionNode':
 					# If this is a root page, find the most recent TopologyCreationTimeStamp
@@ -102,9 +106,16 @@ class RevisionBuilderCtx:
 
 	def dump(self, fd, verbose=None):
 		if self.last_modified_timestamp is not None:
-			print("%s (%d)" % (
+			print("%s (%d): GUID=%s, Author=%s" % (
 				GetFiletime64Datetime(self.last_modified_timestamp),
 				Filetime64ToUnixTimestamp(self.last_modified_timestamp),
+				self.page_persistent_guid,
+				self.last_modified_by,
+				), file=fd)
+		else:
+			print("                                        GUID=%s, Author=%s" % (
+				self.page_persistent_guid,
+				self.last_modified_by,
 				), file=fd)
 		return
 
@@ -126,6 +137,8 @@ class ObjectSpaceBuilderCtx:
 		self.verbosity = getattr(options, 'verbosity', 0)
 
 		self.revisions = {}  # All revisions, including meta-revisions
+		self.versions = [] # Sorted in ascending order of timestamp
+		self.version_timestamps = []
 
 		revisions = {}
 		for rid in object_space.GetRevisionIds():
@@ -160,11 +173,39 @@ class ObjectSpaceBuilderCtx:
 		self.revisions.update(revisions)
 
 		for revision_ctx in sorted(versions, key=lambda ver: ver.last_modified_timestamp):
-			# Put timestamped revisions in sorted order to the dictionary
+			# Put history revisions in sorted order to the revisions and versions dictionaries
 			self.revisions[revision_ctx.rid] = revision_ctx
+			self.versions.append(revision_ctx)
+			self.version_timestamps.append(revision_ctx.last_modified_timestamp)
 			continue
 
 		return
+
+	def GetVersionByTimestamp(self, timestamp, lower_bound=False, upper_bound=False)->RevisionBuilderCtx:
+		if upper_bound:
+			# Returns a most recent version with last_modified_timestamp <= timestamp
+			for rev in reversed(self.versions):
+				if rev.last_modified_timestamp <= timestamp:
+					return rev
+				continue
+		elif lower_bound:
+			# Returns a least recent version with last_modified_timestamp >= timestamp
+			for rev in self.versions:
+				if rev.last_modified_timestamp >= timestamp:
+					return rev
+				continue
+		else:
+			# Returns a version with last_modified_timestamp == timestamp
+			for rev in self.versions:
+				if rev.last_modified_timestamp > timestamp:
+					break
+				if rev.last_modified_timestamp == timestamp:
+					return rev
+				continue
+		return None
+
+	def GetVersionTimestamps(self):
+		return self.version_timestamps
 
 	def GetRevisions(self)->Iterable[RevisionBuilderCtx]:
 		return self.revisions.values()
@@ -203,6 +244,8 @@ class ObjectTreeBuilder:
 	def __init__(self, onestore, property_set_factory, options=None):
 		self.object_spaces:dict[ExGUID, ObjectSpaceBuilderCtx] = {}
 		self.root_gosid = onestore.GetRootObjectSpaceId()
+		self.versions = None
+		self.version_timestamps = []
 
 		# Derived classes MUST do their initialization _before_ invoking super().__init__()
 		os_index = 0
@@ -218,4 +261,126 @@ class ObjectTreeBuilder:
 		for object_space in self.object_spaces.values():
 			object_space.dump(fd, verbose)
 
+		for version in self.GetVersions():
+			print("\nVersion", GetFiletime64Datetime(version.LastModifiedTimeStamp), file=fd)
+			for guid, page_ctx in version.directory.items():
+				print(guid, page_ctx.gosid, file=fd)
 		return
+
+	def GetVersions(self):
+		if self.versions is not None:
+			return self.versions
+
+		'''
+		History is generated starting backwards from the current view,
+		using the initial view from the root index. Each item in the root index has "topology created"
+		timestamp. Inject these timestamps to the timestamp sequence to build.
+
+		Changes in page index topology are saved in the history of the root object space.
+		But revisions other than a root one are useless, because the revisions doesn't get timestamped properly,
+		and the root object space doesn't have any history metadata.
+		For example, if you move a page in the index, a new revision is created, but there's no new timestamp of the change.
+
+		We'll build the tree starting from the oldest revision, using the root revision of the index
+		'''
+
+		self.versions = []
+		rev = None
+
+		timestamps = set()
+		object_space_tree = {} # Indexed by OSID
+		# Parse the root index page. Only one revision is really useful.
+		root_object_space = self.object_spaces[self.root_gosid]
+		index_revision = root_object_space.GetRootRevision()
+		for page_series in getattr(index_revision.GetRootObject(), 'ElementChildNodes', ()):
+			# MetaDataObjectsAboveGraphSpace = getattr(page_series, 'MetaDataObjectsAboveGraphSpace', ())
+			# Because OneNote team doesn't have adult supervision,
+			# there can be a stray item in MetaDataObjectsAboveGraphSpace.
+			# Thus, we'll just use metadata from the root revision of the object space
+			ChildGraphSpaceElementNodes = getattr(page_series, 'ChildGraphSpaceElementNodes', ())
+			for object_space_id in ChildGraphSpaceElementNodes:
+				object_space_ctx = self.object_spaces.get(object_space_id, None)
+				if object_space_ctx is None:
+					continue
+
+				timestamps |= set(object_space_ctx.GetVersionTimestamps())
+
+				object_space_tree[object_space_ctx.gosid] = object_space_ctx
+
+		timestamps = sorted(timestamps)
+
+		prev_version_tree_list = []
+		for timestamp in timestamps:
+			revision_ctx_list:list[RevisionBuilderCtx] = []
+			for object_space_ctx in object_space_tree.values():
+				revision_ctx = object_space_ctx.GetVersionByTimestamp(timestamp, upper_bound=True)
+				if revision_ctx is not None:
+					revision_ctx_list.append(revision_ctx)
+				continue
+
+			if not revision_ctx_list:
+				continue
+
+			revision_ctx_list.sort(key=lambda rev: rev.last_modified_timestamp)
+			Author = revision_ctx_list[-1].last_modified_by
+			version_timestamp = revision_ctx_list[-1].last_modified_timestamp
+
+			version_tree = {}
+			for revision_ctx in revision_ctx_list:
+				guid = revision_ctx.page_persistent_guid
+				if guid not in version_tree:
+					version_tree[guid] = revision_ctx
+					continue
+
+				prev_revision_ctx = version_tree[guid]
+				if prev_revision_ctx.last_modified_timestamp < revision_ctx.last_modified_timestamp:
+					version_tree[guid] = revision_ctx
+					for i in range(1,100):
+						ext_guid = "%s-%d" % (guid, i)
+						if ext_guid not in version_tree:
+							break
+						del version_tree[ext_guid]
+						continue
+				elif revision_ctx is not prev_revision_ctx:
+					for i in range(1,100):
+						ext_guid = "%s-%d" % (guid, i)
+						if ext_guid not in version_tree:
+							version_tree[ext_guid] = revision_ctx
+							break
+						continue
+
+				continue
+
+			# Re-sort the tree in object space order
+			sorted_version_tree = sorted(version_tree.items(), key=lambda rev: rev[1].os_index)
+			version_tree = {}
+			for guid, revision_ctx in sorted_version_tree:
+				version_tree[guid] = revision_ctx
+				continue
+
+			# Sort in GUID (first item in the tuples) order
+			tree_list = sorted(*version_tree.items())
+
+			# See if the previous version_tree is identical
+			if prev_version_tree_list == tree_list:
+				continue
+
+			if rev is None \
+				or version_timestamp != rev.LastModifiedTimeStamp \
+				or (rev.Author is not None \
+					and Author is not None \
+					and rev.Author != Author):
+				rev = SimpleNamespace(
+									directory=version_tree,
+									CreatedTimeStamp=version_timestamp,
+									Author=Author,
+									)
+				self.versions.append(rev)
+			else:
+				rev.directory = version_tree
+
+			rev.LastModifiedTimeStamp=version_timestamp
+			prev_version_tree_list = tree_list
+			continue
+
+		return self.versions
