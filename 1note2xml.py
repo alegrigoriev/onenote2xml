@@ -34,6 +34,8 @@ def main():
 						help="Add Object IDs (OID) attribute to all generated nodes")
 	parser.add_argument("--verbose", '-v', dest='verbosity', type=int, default=0, const=1, nargs='?',
 						help="Generated file verbosity: default 0 - basic properties, 1+ - more stuff")
+	parser.add_argument("--list-revisions", '-l', action="store_true",
+						help="List all revisions to the standard output")
 
 	options = parser.parse_args()
 
@@ -58,6 +60,9 @@ def main():
 		print("Making XML file %s..." % (options.output,), file=sys.stderr, end='', flush=True)
 		onenote.MakeXmlFile(options.output, options)
 		print("done", file=sys.stderr)
+
+	if options.list_revisions:
+		onenote.PrintVersions(sys.stdout, human_friendly=False)
 
 	if log_file is not None:
 		onenote.dump(log_file, options.verbose)

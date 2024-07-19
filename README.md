@@ -65,6 +65,8 @@ To produce a complete file with all revisions, add `--all-revisions` command lin
 It allows to match the generated elements against the raw object contents in the log file.
 It's only useful for debugging OneNote file structure.
 
+`--list-revisions` option generates a list of revisions of this OneNote section file to the standard output.
+
 `--verbose <verbosity>` (`-v <verbosity>`) sets the level of data issued into the generated XML and JSON files.
 
 The following verbosity levels are defined:
