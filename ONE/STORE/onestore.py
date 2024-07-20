@@ -14,6 +14,7 @@
 #
 
 from __future__ import annotations
+from types import SimpleNamespace
 from ..base_types import *
 from .reader import onestore_reader
 from ..exception import UnrecognizedFileFormatException
@@ -92,6 +93,16 @@ class OneStoreFile:
 		self.log_file = log_file
 		self.RootObjectSpaceId = None
 		self.ObjectSpaces = {}
+
+		verbose = getattr(options, 'verbose', None)
+		if verbose is None:
+			verbose = SimpleNamespace()
+
+		from ..property_id import PropertyID
+		from ..property_set_jcid import PropertySetJCID
+		verbose.pretty_prop_type=PropertyID
+		verbose.pretty_jcid_type=PropertySetJCID
+		self.verbose = verbose
 
 		self.header = OneStoreFileHeader(onestore_reader(data, 1024, 0))
 
@@ -188,8 +199,9 @@ class OneStoreFile:
 
 	def dump(self, fd, verbose=None):
 		self.header.dump(fd)
-		print("\nRootObjectSpaceId=%s" % (self.RootObjectSpaceId,), file=fd)
-		for gosid, space in self.ObjectSpaces.items():
-			print("\nObjectSpaceID=%s" % (gosid,), file=fd)
-			space.dump(fd, verbose)
+		if getattr(verbose, 'dump_object_spaces', False):
+			print("\nRootObjectSpaceId=%s" % (self.RootObjectSpaceId,), file=fd)
+			for gosid, space in self.ObjectSpaces.items():
+				print("\nObjectSpaceID=%s" % (gosid,), file=fd)
+				space.dump(fd, verbose)
 		return

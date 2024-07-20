@@ -31,6 +31,14 @@ def main():
 
 	if options.log:
 		log_file = open(options.log, 'wt', encoding='utf-8')
+
+		from types import SimpleNamespace
+
+		verbose = SimpleNamespace()
+		verbose.dump_object_spaces = False
+		verbose.dump_file_data_store = True
+
+		options.verbose = verbose
 	else:
 		log_file = None
 
@@ -40,7 +48,7 @@ def main():
 	print("done", file=sys.stderr)
 
 	if log_file is not None:
-		onefile.dump(log_file)
+		onefile.dump(log_file, options.verbose)
 		log_file.close()
 
 	return 0
