@@ -99,7 +99,7 @@ class ObjectGroup:
 	def getExtguidByCompactID(self, compact_id:CompactID):
 		return self.global_id_table[compact_id]
 
-	def dump(self, fd):
+	def dump(self, fd, verbose=None):
 		print("ObjectGroupID:", str(self.ObjectGroupID), file=fd)
 
 		return

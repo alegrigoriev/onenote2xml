@@ -186,10 +186,10 @@ class OneStoreFile:
 	def __exit__(self, exception_type, exception_value, exception_traceback):
 		return False
 
-	def dump(self, fd):
+	def dump(self, fd, verbose=None):
 		self.header.dump(fd)
 		print("\nRootObjectSpaceId=%s" % (self.RootObjectSpaceId,), file=fd)
 		for gosid, space in self.ObjectSpaces.items():
 			print("\nObjectSpaceID=%s" % (gosid,), file=fd)
-			space.dump(fd)
+			space.dump(fd, verbose)
 		return

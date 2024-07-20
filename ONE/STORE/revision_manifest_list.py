@@ -269,17 +269,16 @@ class RevisionManifest:
 			continue
 		return None
 
-	def dump(self, fd):
+	def dump(self, fd, verbose=None):
 		print("\nRevision:", self.rid, file=fd)
 		if self.dep_revision is not None:
 			print(" PrevRevision:", self.dep_revision.rid, file=fd)
 		for role, obj_id in self.root_objects.items():
 			print(" Root object: %s, role: %d" % (obj_id, role), file=fd)
 		for object_group in self.object_groups.values():
-			object_group.dump(fd)
+			object_group.dump(fd, verbose)
 
 		for extid, obj in self.objects.items():
 			print("\nObjectID:", str(extid), file=fd)
-			obj.dump(fd)
-
+			obj.dump(fd, verbose)
 		return

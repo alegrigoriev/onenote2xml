@@ -86,9 +86,9 @@ class ObjectSpace:
 		self.contexts[key] = rid
 		return
 
-	def dump(self, fd):
+	def dump(self, fd, verbose=None):
 		for revision in self.revisions.values():
-			revision.dump(fd)
+			revision.dump(fd, verbose)
 		for (gctxid, role), rid in self.contexts.items():
 			print("Context %s:%d->revision %s" % (gctxid, role, rid), file=fd)
 
