@@ -149,7 +149,15 @@ class jsonTitleNode(jsonPropertySetBase):
 	DOC_TYPE = 'title'
 
 class jsonPageMetaData(jsonPropertySetBase):
-	...
+	def MakeJsonTree(self, json_tree_context):
+		json_tree = super().MakeJsonTree(json_tree_context)
+		if self._oid is not None:
+			# The metadata object OID is made from jcidPageNode OID by XOR with GUID
+			# { 0x22a8c031, 0x3600, 0x42ee, { 0xb7, 0x14, 0xd7, 0xac, 0xda, 0x24, 0x35, 0xe8 } },
+			# or {22a8c031-3600-42ee-b714-d7acda2435e8}.
+			json_tree['RefersToPageNode'] = str(self._oid ^ ExGUID(b'\x31\xC0\xA8\x22\x00\x36\xEE\x42\xb7\x14\xD7\xAC\xDA\x24\x35\xE8', 0))
+
+		return json_tree
 
 class jsonSectionMetaData(jsonPropertySetBase):
 	...
@@ -260,6 +268,7 @@ OneNootebookJsonPropertySetDocBuilderTemplates = {
 	PropertySetJCID.jcidReadOnlyPersistablePropertyContainerForAuthor.value :
 						jsonReadOnlyPersistablePropertyContainerForAuthor,
 	PropertySetJCID.jcidParagraphStyleObject.value: jsonParagraphStyleObject,
+	PropertySetJCID.jcidPageMetaData.value: jsonPageMetaData,
 	PropertySetJCID.jcidNoteTagSharedDefinitionContainer.value: jsonNoteTagSharedDefinitionContainer,
 	PropertySetJCID.jcidImageNode.value: jsonImageNode,
 	PropertySetJCID.jcidNumberListNode.value: jsonNumberListNode,

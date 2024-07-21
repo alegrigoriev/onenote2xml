@@ -175,6 +175,12 @@ class xmlEmbeddedFileContainer(PropertySetXmlElementBase):
 
 class xmlPictureContainer14(xmlEmbeddedFileContainer): ...
 
+class xmlPageMetaData(PropertySetXmlElementBase):
+	# The metadata object OID is made from jcidPageNode OID by XOR with GUID
+	# { 0x22a8c031, 0x3600, 0x42ee, { 0xb7, 0x14, 0xd7, 0xac, 0xda, 0x24, 0x35, 0xe8 } }, or {22a8c031-3600-42ee-b714-d7acda2435e8}.
+	def MakeXmlComment(self)->str:
+		return "OSID=" + str(self._oid ^ ExGUID("{22a8c031-3600-42ee-b714-d7acda2435e8}", 0))
+
 from ..NOTE.property_set_object_factory import PropertySetFactory
 
 class XmlPropertySetFactory:
@@ -221,6 +227,7 @@ OneNootebookPropertySetElementBuilderTemplates = {
 	PropertySetJCID.jcidRichTextOENode.value: xmlRichTextOENode,
 	PropertySetJCID.jcidEmbeddedFileContainer.value: xmlEmbeddedFileContainer,
 	PropertySetJCID.jcidPictureContainer14.value: xmlPictureContainer14,
+	PropertySetJCID.jcidPageMetaData.value: xmlPageMetaData,
 }
 
 from ..NOTE.property_set_object_factory import OneNotebookPropertySetFactory

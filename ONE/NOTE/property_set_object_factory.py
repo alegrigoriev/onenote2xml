@@ -429,6 +429,23 @@ class jcidTitleNode(PropertySetObject):
 
 class jcidPageMetaData(PropertySetObject):
 	JCID = PropertySetJCID.jcidPageMetaData
+	# The metadata object OID is made from jcidPageNode OID by XOR with GUID
+	# { 0x22a8c031, 0x3600, 0x42ee, { 0xb7, 0x14, 0xd7, 0xac, 0xda, 0x24, 0x35, 0xe8 } }, or {22a8c031-3600-42ee-b714-d7acda2435e8}.
+	def make_object(self, revision_ctx, property_set):
+		super().make_object(revision_ctx, property_set)
+		return
+		if self._oid is None:
+			return self
+
+		self.PageOSID = str(self._oid ^ ExGUID(b'\x31\xC0\xA8\x22\x00\x36\xEE\x42\xb7\x14\xD7\xAC\xDA\x24\x35\xE8', 0))
+		from ..STORE.property import Property
+		# Hijack NotebookManagementEntityGuid
+		prop_obj = self.PROPERTY_FACTORY(Property(int(PropertyTypeID.NoData) << 26), key='jcidPageNode', value=self.PageOSID)
+		if prop_obj is NotImplemented:
+			return self
+		prop_obj.min_verbosity = 5
+		self._properties[prop_obj.key] = prop_obj
+		return self
 
 	PROPERTIES_VERBOSITY = {
 		int(PropertyID.PageLevel)                       : 0,
