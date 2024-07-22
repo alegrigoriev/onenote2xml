@@ -31,6 +31,7 @@ def MakeReadonlyXmlTree(read_only_types_dict):
 class XmlRevisionBuilderCtx(RevisionBuilderCtx):
 	def __init__(self, property_set_factory, revision, object_space_ctx):
 		self.compact = getattr(object_space_ctx.options, 'compact', False)
+		self.include_oids = getattr(object_space_ctx.options, 'include_oids', False)
 		super().__init__(property_set_factory, revision, object_space_ctx)
 		return
 

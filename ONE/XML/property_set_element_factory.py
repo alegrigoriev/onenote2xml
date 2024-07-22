@@ -37,6 +37,8 @@ class PropertySetXmlElementBase:
 
 	def MakeXmlElement(self, revision_ctx):
 		element = ET.Element(self._jcid_name)
+		if revision_ctx.include_oids and self._oid is not None:
+			element.set('OID', str(self._oid))
 
 		for prop in self._properties.values():
 			prop_element = prop.MakeXmlElement(revision_ctx)

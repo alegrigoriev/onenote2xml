@@ -55,3 +55,8 @@ python 1note2json.py <OneNote filename> [common options]
 `--output <filename>` (`-O <filename`)
 - the file name to write the XML or JSON file.
 The file will contain the most current revision of all pages stored in the source OneNote file.
+
+`--include-oids` (`-o`)
+- tag all structures with object IDs (extended GUIDs) in the generated files.
+It allows to match the generated elements against the raw object contents in the log file.
+It's only useful for debugging OneNote file structure.

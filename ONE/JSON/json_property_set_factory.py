@@ -29,6 +29,9 @@ class jsonPropertySetBase:
 
 	def MakeJsonNode(self, revision_ctx):
 		obj = {}
+		if revision_ctx.include_oids and self._oid is not None:
+			obj['OID'] = str(self._oid)
+
 		for prop in self._properties.values():
 
 			subobj = prop.MakeJsonValue(revision_ctx)
@@ -94,6 +97,9 @@ class jsonRichTextOENode(jsonPropertySetBase):
 		paragraph_style = getattr(self, 'ParagraphStyle', None)
 		if paragraph_style is not None:
 			root['style'] = paragraph_style.MakeJsonNode(revision_ctx)
+
+		if revision_ctx.include_oids and self._oid is not None:
+			root['OID'] = str(self._oid)
 		# TODO: add other elements
 		return root
 

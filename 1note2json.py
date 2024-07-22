@@ -28,6 +28,8 @@ def main():
 	parser.add_argument("--output", '-O', metavar='<json-filename>',
 						help="Filename of output JSON file")
 	parser.add_argument("--log", '-L', metavar='<log file>', help="Log file")
+	parser.add_argument("--include-oids", '-o', action="store_true",
+						help="Add Object IDs (OID) attribute to all generated structures")
 
 	options = parser.parse_args()
 
