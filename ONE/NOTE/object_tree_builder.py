@@ -74,6 +74,7 @@ class RevisionBuilderCtx:
 
 		self.revision = revision
 		self.rid:ExGUID = revision.rid
+		self.is_encrypted = revision.IsEncrypted()
 
 		self.last_modified_timestamp = None
 		self.last_modified_by = None
@@ -219,7 +220,7 @@ class ObjectSpaceBuilderCtx:
 
 		history_rid = self.object_space.GetContextRevisionId(ExGUID("{7111497F-1B6B-4209-9491-C98B04CF4C5A}", 1))
 		history_revision_ctx = revisions.pop(history_rid, None)
-		if history_revision_ctx is not None:
+		if history_revision_ctx is not None and not history_revision_ctx.is_encrypted:
 			# Revision history goes first
 			self.revisions[history_rid] = history_revision_ctx
 
@@ -238,9 +239,12 @@ class ObjectSpaceBuilderCtx:
 		# Add the remaining non-timestamped revisions to the dictionary
 		self.revisions.update(revisions)
 
-		for revision_ctx in sorted(versions, key=lambda ver: ver.last_modified_timestamp):
+		for revision_ctx in sorted(versions, key=lambda ver: ver.last_modified_timestamp if ver.last_modified_timestamp is not None else 0):
 			# Put history revisions in sorted order to the revisions and versions dictionaries
 			self.revisions[revision_ctx.rid] = revision_ctx
+			if revision_ctx.is_encrypted:
+				continue
+
 			self.versions.append(revision_ctx)
 			self.version_timestamps.append(revision_ctx.last_modified_timestamp)
 			continue

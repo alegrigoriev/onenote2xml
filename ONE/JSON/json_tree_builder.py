@@ -32,6 +32,9 @@ class JsonRevisionTreeBuilderCtx(RevisionBuilderCtx):
 			role_tree = self.GetRootObject(role)
 			obj.update(role_tree.MakeJsonNode(self))
 
+		if self.is_encrypted:
+			obj['IsEncrypted'] = True
+
 		return obj
 
 	def MakeFile(self, directory, guid):

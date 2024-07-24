@@ -49,6 +49,9 @@ class XmlRevisionBuilderCtx(RevisionBuilderCtx):
 		# All roles are included in the tree
 		revision_element = ET.Element(tag)
 
+		if self.is_encrypted:
+			revision_element.set('IsEncrypted', 'true')
+
 		self.read_only_types_dict = read_only_types_dict
 
 		if self.verbosity < 4:
