@@ -181,7 +181,7 @@ class ObjectSpaceObjectStreamOfContextIDs:
 		return iter(self.ContextIDs)
 
 from .onestore import OneStoreFile
-def ObjectSpaceObjectPropSet(onestore:OneStoreFile, ref, jcid, global_id_table):
+def ObjectSpaceObjectPropSet(onestore:OneStoreFile, ref, jcid, global_id_table, encryption_key=None):
 	''' OIDs (variable): An ObjectSpaceObjectStreamOfOIDs (section 2.6.2)
 	that specifies the count and list of objects that are referenced by this ObjectSpaceObjectPropSet.
 	The count of referenced objects is calculated as the number of properties specified by the body field,
@@ -192,12 +192,16 @@ def ObjectSpaceObjectPropSet(onestore:OneStoreFile, ref, jcid, global_id_table):
 	'''
 
 	reader = onestore.get_chunk(ref)
-	if jcid.IsReadOnly():
+	if jcid.IsReadOnly() or encryption_key is not None:
 		raw_data = reader.read_bytes_at(0, ref.cb)
 	else:
 		raw_data = None
 
 	property_set = PropertySet(jcid, raw_data)
+
+	if encryption_key is not None:
+		# Can't read encrypted objects.
+		return property_set
 
 	OIDs = ObjectSpaceObjectStreamOfOIDs(reader, global_id_table)
 	iterObjectIDs = iter(OIDs)

@@ -124,6 +124,15 @@ def RevisionManifestList(obj_space, onestore, ref):
 
 	return
 
+class ObjectDataEncryptionKey:
+	def __init__(self, onestore, ref):
+		self.key = onestore.get_chunk(ref).read_bytes(ref.cb)
+		return
+
+	def dump(self, fd, verbose=None):
+		print("ObjectDataEncryptionKey:", self.key.hex(), file=fd)
+		return
+
 class RevisionManifest:
 	ROOT_ROLE_CONTENTS = 1
 	ROOT_ROLE_PAGE_METADATA = 2
@@ -133,6 +142,7 @@ class RevisionManifest:
 		self.DataSignatureGroup = None
 		self.objects = {}
 		self.global_id_table = None
+		self.encryption_key = None
 		self.object_groups = {}
 		self.root_objects = {}
 
@@ -158,14 +168,14 @@ class RevisionManifest:
 
 		node = next(node_iter)
 		if node.ID.value == ID_ObjectDataEncryptionKeyV2FNDX:
+			self.encryption_key = ObjectDataEncryptionKey(onestore, node.ref)
+			if getattr(onestore.verbose, 'dump_nodelists', False):
+				self.encryption_key.dump(onestore.log_file, onestore.verbose)
 			node = next(node_iter)
 
 		while (nid := node.ID) != ID_RevisionManifestEndFND:
 
 			if nid == ID_ObjectGroupListReferenceFND:
-				if self.odcsDefault != 0:
-					# Can't read encrypted objects.
-					continue
 				obj_group = ObjectGroup(onestore, node.ref, self)
 				assert(obj_group.ObjectGroupID == node.ObjectGroupID)
 				self.object_groups[node.ObjectGroupID] = obj_group
@@ -233,6 +243,9 @@ class RevisionManifest:
 	def getExtguidByCompactID(self, compact_id:CompactID):
 		return self.global_id_table[compact_id]
 
+	def IsEncrypted(self):
+		return self.encryption_key is not None
+
 	def AddObject(self, oid, obj, md5Hash=None):
 		obj.oid = oid
 		if not obj.jcid.IsReadOnly():
@@ -282,5 +295,7 @@ class RevisionManifest:
 			for extid, obj in self.objects.items():
 				print("\nObjectID:", str(extid), file=fd)
 				obj.dump(fd, verbose)
+			if self.encryption_key is not None:
+				self.encryption_key.dump(fd, verbose)
 		# else the objects will be dumped along the filenodes
 		return

@@ -87,7 +87,7 @@ class ObjectGroup:
 			# FileNodeList will raise UnexpectedFileNodeException if any other node ID is read
 
 			oid = self.global_id_table[node.body.coid]
-			obj = ObjectSpaceObjectPropSet(onestore, node.BlobRef, node.body.jcid, self.global_id_table)
+			obj = ObjectSpaceObjectPropSet(onestore, node.BlobRef, node.body.jcid, self.global_id_table, revision.encryption_key)
 			node.prop_set = obj
 			revision.AddObject(oid, obj, node.md5Hash)
 			continue
