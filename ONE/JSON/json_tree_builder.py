@@ -21,6 +21,7 @@ class JsonRevisionTreeBuilderCtx(RevisionBuilderCtx):
 		self.include_oids = getattr(object_space_ctx.options, 'include_oids', False)
 		self.filename = None
 		self.full_path = None
+		self.file_data = None
 		super().__init__(property_set_factory, revision, object_space_ctx)
 		return
 
@@ -41,6 +42,14 @@ class JsonRevisionTreeBuilderCtx(RevisionBuilderCtx):
 		from pathlib import Path
 		import json
 
+		if self.full_path is not None:
+			assert(self.filename == guid + '.json')
+			if self.file_data is None:
+				self.file_data = self.full_path.read_bytes()
+
+			Path(directory, self.filename).write_bytes(self.file_data)
+			return
+
 		self.filename = guid + '.json'
 		self.full_path = Path(directory, self.filename)
 
@@ -49,6 +58,9 @@ class JsonRevisionTreeBuilderCtx(RevisionBuilderCtx):
 		with open(self.full_path, 'wt') as file:
 			json.dump(obj_tree, file, indent='\t')
 		return
+
+	def GetFilename(self):
+		return self.filename
 
 class JsonObjectSpaceBuilderCtx(ObjectSpaceBuilderCtx):
 	REVISION_BUILDER = JsonRevisionTreeBuilderCtx
