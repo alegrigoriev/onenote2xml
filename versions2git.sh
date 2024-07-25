@@ -74,10 +74,9 @@ git config --file "$versions_file" --get-regexp 'versions\.v.+' | {
 				elif [ $key = directory ]
 				then
 					DIRECTORY="$value"
-					# Delete all previous files in git worktree:
-					(cd "$git_dir"; git rm -qrf --ignore-unmatch * )
-					# Copy the new files to git worktree
-					cp -r "$versions_dir/$DIRECTORY"/* "$git_dir"
+					export GIT_WORK_TREE="$(realpath "$versions_dir/$DIRECTORY")"
+					# Git for Windows will skip files with timestamp with same seconds. Need to delete the old index
+					(cd "$git_dir"; rm $(git rev-parse --git-path index) )
 				fi
 			done
 
