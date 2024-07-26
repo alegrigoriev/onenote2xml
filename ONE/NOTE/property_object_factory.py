@@ -75,10 +75,18 @@ class PropertyObject:
 		yield (), self
 		# By default there's no sub-objects
 		return
+	def update_hash(self, md5hash):
+		md5hash.update(self.property_id.to_bytes(4, byteorder='little', signed=False))
+		return
 
 class NoDataPropertyObject(PropertyObject): ...
 
-class BoolPropertyObject(PropertyObject): ...
+class BoolPropertyObject(PropertyObject):
+
+	def update_hash(self, md5hash):
+		super().update_hash(md5hash)
+		md5hash.update(b'\1' if self.value else b'\0')
+		return
 
 class PropertyObject1To8bytesData(PropertyObject):
 
@@ -87,9 +95,20 @@ class PropertyObject1To8bytesData(PropertyObject):
 		self.int_value = _property.value
 		return
 
+	def update_hash(self, md5hash):
+		super().update_hash(md5hash)
+		md5hash.update(len(self.data).to_bytes(4, byteorder='little', signed=False))
+		md5hash.update(self.data)
+		return
+
 class IntPropertyObject(PropertyObject1To8bytesData): ...
 
-class FourBytesOfLengthFollowedByDataPropertyObject(PropertyObject): ...
+class FourBytesOfLengthFollowedByDataPropertyObject(PropertyObject):
+	def update_hash(self, md5hash):
+		super().update_hash(md5hash)
+		md5hash.update(len(self.data).to_bytes(4, byteorder='little', signed=False))
+		md5hash.update(self.data)
+		return
 
 class ArrayOfObjectIDsPropertyObject(PropertyObject):
 	def __init__(self, _property:Property, **kwargs):
@@ -113,6 +132,14 @@ class ArrayOfObjectIDsPropertyObject(PropertyObject):
 				yield from obj
 		return
 
+	def update_hash(self, md5hash):
+		super().update_hash(md5hash)
+		md5hash.update(len(self.value).to_bytes(4, byteorder='little', signed=False))
+		for obj in self.value:
+			if obj is not None:
+				md5hash.update(obj.get_hash())
+		return
+
 class ObjectIDPropertyObject(ArrayOfObjectIDsPropertyObject):
 	def get_object_value(self):
 		if self.value:
@@ -124,6 +151,11 @@ class ArrayOfObjectSpaceIDsPropertyObject(PropertyObject):
 	def __init__(self, _property:Property, **kwargs):
 		super().__init__(_property, **kwargs)
 		self.osids = self.value
+		return
+
+	def update_hash(self, md5hash):
+		super().update_hash(md5hash)
+		md5hash.update(len(self.value).to_bytes(4, byteorder='little', signed=False))
 		return
 
 class ObjectSpaceIDPropertyObject(ArrayOfObjectSpaceIDsPropertyObject):
@@ -140,6 +172,11 @@ class ArrayOfContextIDsPropertyObject(PropertyObject):
 		self.ctxids = self.value
 		return
 
+	def update_hash(self, md5hash):
+		super().update_hash(md5hash)
+		md5hash.update(len(self.value).to_bytes(4, byteorder='little', signed=False))
+		return
+
 class ContextIDPropertyObject(ArrayOfContextIDsPropertyObject):
 	def get_object_value(self):
 		if self.value:
@@ -152,6 +189,13 @@ class ArrayOfPropertyValuesPropertyObject(PropertyObject):
 	def __init__(self, _property:Property, **kwargs):
 		super().__init__(_property, **kwargs)
 		self.propsets = self.value
+		return
+
+	def update_hash(self, md5hash):
+		super().update_hash(md5hash)
+		md5hash.update(len(self.value).to_bytes(4, byteorder='little', signed=False))
+		for obj in self.value:
+			md5hash.update(obj.get_hash())
 		return
 
 	def make_object(self, property_set_obj, revision_ctx):

@@ -24,7 +24,7 @@ def MakeReadonlyXmlTree(read_only_types_dict):
 	for read_only_type, read_only_type_dict in sorted(read_only_types_dict.items(), key=lambda k: k[0]):
 		readonly_subelement = ET.SubElement(readonly_element, read_only_type)
 		for key, subelement in sorted(read_only_type_dict.items(), key=lambda k: k[0]):
-			subelement.set('OID', key)
+			subelement.set('ID', key)
 			readonly_subelement.append(subelement)
 	return readonly_element
 
@@ -71,11 +71,11 @@ class XmlRevisionBuilderCtx(RevisionBuilderCtx):
 			if readonly_space is NotImplemented:
 				readonly_space = propset_obj._jcid_name
 			read_only_dict = self.read_only_types_dict.setdefault(readonly_space, {})
-			key = str(propset_obj._oid)
+			key = str(GUID(propset_obj.get_hash()))
 			if key not in read_only_dict:
 				read_only_dict[key] = propset_obj.MakeXmlElement(self)
 
-			element = ET.Element(propset_obj._jcid_name, { "OID" : key, })
+			element = ET.Element(propset_obj._jcid_name, { "ID" : key, })
 		else:
 			element = propset_obj.MakeXmlElement(self)
 

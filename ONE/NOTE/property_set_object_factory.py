@@ -18,6 +18,7 @@ from ..property_set_jcid import *
 from ..STORE.property_set import PropertySet
 from ..property_id import *
 from enum import IntEnum
+from hashlib import md5
 
 class PropertySetObject:
 	JCID = NotImplemented
@@ -50,6 +51,10 @@ class PropertySetObject:
 	def make_object(self, revision_ctx, property_set:PropertySet):
 		# parent revision contains oid->PropertySet table
 		# object_table contains objects already built
+
+		md5hash = md5(usedforsecurity=False)
+		md5hash.update(self._jcid.jcid.to_bytes(4, byteorder='little', signed=False))
+
 		for prop in property_set.Properties():
 			prop_obj = self.PROPERTY_FACTORY(prop)
 			if prop_obj is NotImplemented:
@@ -58,7 +63,11 @@ class PropertySetObject:
 			prop_obj.make_object(self, revision_ctx)
 
 			self._properties[prop_obj.key] = prop_obj
+			prop_obj.update_hash(md5hash)
 			continue
+
+		self.md5 = md5hash.digest()
+
 		return
 
 	def __iter__(self):
@@ -69,6 +78,9 @@ class PropertySetObject:
 				continue
 			continue
 		return
+
+	def get_hash(self):
+		return self.md5
 
 class jcidReadOnlyPersistablePropertyContainerForAuthor(PropertySetObject):
 	JCID = PropertySetJCID.jcidReadOnlyPersistablePropertyContainerForAuthor
