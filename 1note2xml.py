@@ -42,6 +42,8 @@ def main():
 						help="Maximum time span in minutes, to combine revisions to a single one")
 	parser.add_argument("--timestamp", '-T', metavar='<revision-timestamp>', type=int, default=None,
 						help="Generate a snapshot of a revision with this timestamp")
+	parser.add_argument("--incremental", '-i', action="store_true",
+						help="Generate revisions in incremental form")
 
 	options = parser.parse_args()
 

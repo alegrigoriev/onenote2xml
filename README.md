@@ -130,3 +130,7 @@ The versions will be saved as separate directories, named with the version times
 or as a single JSON or XML file specified by `--output` (`-O`) option.
 `<revision timestamp>` values can be obtained from the list produced by `--list-revisions` command line option.
 By default, in absence of `--all-revisions` option, the most recent revision snapshot is generated.
+
+`--incremental` (`-i`) option modifies `--output-directory` with `--all-revisions` behavior,
+making it to write only modified files to the version directories.
+Without this option, each version directory contains the full snapshot of the whole OneNote section.

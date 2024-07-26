@@ -463,9 +463,15 @@ class ObjectTreeBuilder:
 
 		return self.versions
 
-	def _WriteVersionFiles(self, version, directory):
+	def _WriteVersionFiles(self, version, directory, prev_directory={}, incremental=False):
 
 		for guid, file_ctx in version.directory.items():
+			prev_file = prev_directory.get(guid, None)
+			if prev_file is not None \
+				and prev_file is file_ctx:
+				if incremental:
+					continue
+
 			file_ctx.MakeFile(directory, guid)
 			continue
 
@@ -496,9 +502,12 @@ class ObjectTreeBuilder:
 				version = self.GetVersions()[-1]
 			return self._WriteVersionFiles(version, directory)
 
+		incremental = getattr(options, 'incremental', False)
+
 		versions_list = []
 
 		versions_file = open(Path(directory, 'versions.txt'), 'wt')
+		prev_directory = {}
 		for version in self.GetVersions():
 			timestamp = version.LastModifiedTimeStamp
 			datetime = GetFiletime64Datetime(timestamp, local=False)
@@ -507,7 +516,7 @@ class ObjectTreeBuilder:
 			version_dir = Path(directory, version_str)
 			version_dir.mkdir(exist_ok=True)
 
-			self._WriteVersionFiles(version, version_dir)
+			self._WriteVersionFiles(version, version_dir, prev_directory, incremental)
 
 			print('[version "v%d"]' % (timestamp), file=versions_file)
 			print('\tAUTHOR =', version.Author, file=versions_file)
@@ -516,9 +525,12 @@ class ObjectTreeBuilder:
 			print(file=versions_file)
 
 			versions_list.append((timestamp, version_str))
+			prev_directory = version.directory
 			continue
 
 		print('[versions]', file=versions_file)
+		if incremental:
+			print('\tincremental = true', file=versions_file)
 
 		for timestamp, section in versions_list:
 			print('\tv%d = %s' % (timestamp, section), file=versions_file)

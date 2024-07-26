@@ -46,6 +46,13 @@ then
 fi
 
 EMAIL="$(git -C "$git_dir" config --get user.email)"
+incremental=false
+if [ "$(git config --file "$versions_file" --get --type bool 'versions.incremental')" = true ]
+then
+	incremental=true
+	echo "Incremental history build"
+	(cd "$git_dir"; git rm -qrf --ignore-unmatch * )
+fi
 
 git config --file "$versions_file" --get-regexp 'versions\.v.+' | {
 
@@ -74,9 +81,14 @@ git config --file "$versions_file" --get-regexp 'versions\.v.+' | {
 				elif [ $key = directory ]
 				then
 					DIRECTORY="$value"
-					export GIT_WORK_TREE="$(realpath "$versions_dir/$DIRECTORY")"
-					# Git for Windows will skip files with timestamp with same seconds. Need to delete the old index
-					(cd "$git_dir"; rm $(git rev-parse --git-path index) )
+					if $incremental
+					then
+						cp -r "$versions_dir/$DIRECTORY"/* -t "$git_dir"
+					else
+						export GIT_WORK_TREE="$(realpath "$versions_dir/$DIRECTORY")"
+						# Git for Windows will skip files with timestamp with same seconds. Need to delete the old index
+						(cd "$git_dir"; rm $(git rev-parse --git-path index) )
+					fi
 				fi
 			done
 
