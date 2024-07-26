@@ -54,11 +54,12 @@ class PropertySetObject:
 		# parent revision contains oid->PropertySet table
 		# object_table contains objects already built
 		properties_verbosity = self.PROPERTIES_VERBOSITY
+		properties_order = self.PROPERTIES_ORDER
 
 		md5hash = md5(usedforsecurity=False)
 		md5hash.update(self._jcid.jcid.to_bytes(4, byteorder='little', signed=False))
 
-		for prop in property_set.Properties():
+		for prop in sorted(property_set.Properties(), key=lambda k:properties_order.get(k.property_id, k.property_id)):
 			prop_obj = self.PROPERTY_FACTORY(prop)
 			if prop_obj is NotImplemented:
 				continue
@@ -255,6 +256,18 @@ class PropertySetObject:
 		int(PropertyID.AudioRecordingDuration)          : 0,
 	}
 
+	@staticmethod
+	def MakePropertiesOrder(properties_verbosity:set|dict):
+		prop_order_dict = {}
+		i = 1
+		for prop_id in properties_verbosity:
+			prop_order_dict[prop_id] = i
+			i += 1
+			continue
+		return prop_order_dict
+
+	PROPERTIES_ORDER = MakePropertiesOrder(PROPERTIES_VERBOSITY)
+
 class jcidReadOnlyPersistablePropertyContainerForAuthor(PropertySetObject):
 	JCID = PropertySetJCID.jcidReadOnlyPersistablePropertyContainerForAuthor
 
@@ -266,6 +279,7 @@ class jcidSectionNode(PropertySetObject):
 		int(PropertyID.TopologyCreationTimeStamp)       : 3,
 		int(PropertyID.ElementChildNodes)  : 0,
 		}
+	PROPERTIES_ORDER = PropertySetObject.MakePropertiesOrder(PROPERTIES_VERBOSITY)
 
 class jcidPageSeriesNode(PropertySetObject):
 	JCID = PropertySetJCID.jcidPageSeriesNode
@@ -277,6 +291,7 @@ class jcidPageSeriesNode(PropertySetObject):
 		int(PropertyID.LastModifiedTime)                : 2,
 		int(PropertyID.TopologyCreationTimeStamp)       : 3,
 		}
+	PROPERTIES_ORDER = PropertySetObject.MakePropertiesOrder(PROPERTIES_VERBOSITY)
 
 class jcidPageNode(PropertySetObject):
 	JCID = PropertySetJCID.jcidPageNode
@@ -318,6 +333,7 @@ class jcidRichTextOENode(PropertySetObject):
 		int(PropertyID.IsConflictObjectForRender)       : 0,
 		int(PropertyID.IsConflictObjectForSelection)    : 4,
 		}
+	PROPERTIES_ORDER = PropertySetObject.MakePropertiesOrder(PROPERTIES_VERBOSITY)
 
 	def make_object(self, revision_ctx, property_set:PropertySet):
 		super().make_object(revision_ctx, property_set)
@@ -397,6 +413,7 @@ class jcidPageMetaData(PropertySetObject):
 		int(PropertyID.SchemaRevisionInOrderToRead)     : 4,
 		int(PropertyID.SchemaRevisionInOrderToWrite)    : 4,
 		}
+	PROPERTIES_ORDER = PropertySetObject.MakePropertiesOrder(PROPERTIES_VERBOSITY)
 
 class jcidSectionMetaData(PropertySetObject):
 	JCID = PropertySetJCID.jcidSectionMetaData
