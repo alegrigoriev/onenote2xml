@@ -14,6 +14,7 @@
     <Name>py1note</Name>
     <RootNamespace>py1note</RootNamespace>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <CommandLineArguments>"C:\Users\agrigoriev\Downloads\Monet\PCTBUS Application Layer.one" --log pctbus-application-layer.log -j pctbus-application-layer.json -x pctbus-application-layer.xml</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterId>Global|PythonCore|3.10</InterpreterId>
   </PropertyGroup>
