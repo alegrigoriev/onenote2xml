@@ -14,12 +14,14 @@
 #
 
 from __future__ import annotations
+import sys
 from typing import Iterable
 from types import SimpleNamespace
 from ..base_types import *
 from ..exception import CircularObjectReferenceException, ObjectNotFoundException
 from ..STORE.revision_manifest_list import RevisionManifest
 from ..STORE.onestore import OneStoreFile
+from pathlib import Path
 
 def GetTopologyCreationTimeStamps(obj):
 	timestamps = []
@@ -47,10 +49,13 @@ class RevisionBuilderCtx:
 		self.rid:ExGUID = revision.rid
 
 		self.last_modified_timestamp = None
+		self.last_modified_by = None
 
 		self.revision_roles = {}
 		self.obj_dict = {}
 		self.page_persistent_guid:GUID = None
+		self.filename = None
+		self.page_title = 'notitle'
 
 		# Build all roles
 		for role in self.revision.GetRootObjectRoles():
@@ -60,10 +65,14 @@ class RevisionBuilderCtx:
 
 			if role == self.ROOT_ROLE_REVISION_METADATA:
 				self.last_modified_timestamp = getattr(root_obj, 'LastModifiedTimeStamp', self.last_modified_timestamp)
+				last_modified_by = getattr(root_obj, 'AuthorMostRecent', None)
+				self.last_modified_by = getattr(last_modified_by, 'Author', None)
 			elif role == self.ROOT_ROLE_PAGE_METADATA:
-				self.page_persistent_guid = str(getattr(root_obj, 'NotebookManagementEntityGuid', self.page_persistent_guid))
+				self.page_persistent_guid = str(getattr(root_obj, 'NotebookManagementEntityGuid', ""))
+				self.page_title = getattr(root_obj, 'CachedTitleString', self.page_title)
 			elif role == self.ROOT_ROLE_CONTENTS:
 				if root_obj._jcid_name == 'jcidSectionNode':
+					self.page_title = 'Section root'
 					# If this is a root page, find the most recent TopologyCreationTimeStamp
 					if self.last_modified_timestamp is None:
 						topology_creation_timestamps = GetTopologyCreationTimeStamps(root_obj)
@@ -104,18 +113,26 @@ class RevisionBuilderCtx:
 		obj.make_object(self, prop_set)
 		return obj
 
+	def GetFilename(self):
+		return self.filename or self.page_persistent_guid
+
+	def GetTitle(self):
+		return self.page_title
+
 	def dump(self, fd, verbose=None):
 		if self.last_modified_timestamp is not None:
-			print("%s (%d): GUID=%s, Author=%s" % (
+			print("%s (%d): GUID=%s, Author=%s, title=%s" % (
 				GetFiletime64Datetime(self.last_modified_timestamp),
 				Filetime64ToUnixTimestamp(self.last_modified_timestamp),
 				self.page_persistent_guid,
 				self.last_modified_by,
+				self.page_title,
 				), file=fd)
 		else:
-			print("                                        GUID=%s, Author=%s" % (
+			print("                                        GUID=%s, Author=%s, title=%s" % (
 				self.page_persistent_guid,
 				self.last_modified_by,
+				self.page_title,
 				), file=fd)
 		return
 
@@ -384,3 +401,58 @@ class ObjectTreeBuilder:
 			continue
 
 		return self.versions
+
+	def _WriteVersionFiles(self, version, directory):
+
+		for guid, file_ctx in version.directory.items():
+			file_ctx.MakeFile(directory, guid)
+			continue
+
+		with open(Path(directory, 'index.txt'), 'wt') as pages_file:
+			for item_ctx in version.directory.values():
+				print("%s:%s" % (item_ctx.GetFilename(), item_ctx.GetTitle()), file=pages_file)
+		return
+
+	def MakeVersionFiles(self, directory, options):
+		directory = Path(directory)
+		if directory.is_dir():
+			# Check if it's not empty
+			for _ in directory.iterdir():
+				print("WARNING: Versions directory %s is not empty: will not clean it." % (str(directory)), file=sys.stderr)
+				break
+		else:
+			directory.mkdir(parents=True)
+
+		if not getattr(options, 'all_revisions', False):
+			version = self.GetVersions()[-1]
+			return self._WriteVersionFiles(version, directory)
+
+		versions_list = []
+
+		versions_file = open(Path(directory, 'versions.txt'), 'wt')
+		for version in self.GetVersions():
+			timestamp = version.LastModifiedTimeStamp
+			datetime = GetFiletime64Datetime(timestamp, local=False)
+			version_str = datetime.isoformat().replace(':', '-').removesuffix('+00-00')
+			print("Edited on %s by %s" % (version_str, version.Author), file=sys.stderr)
+			version_dir = Path(directory, version_str)
+			version_dir.mkdir(exist_ok=True)
+
+			self._WriteVersionFiles(version, version_dir)
+
+			print('[version "v%d"]' % (timestamp), file=versions_file)
+			print('\tAUTHOR =', version.Author, file=versions_file)
+			print('\tTIMESTAMP = %d' % (Filetime64ToUnixTimestamp(timestamp),), file=versions_file)
+			print('\tDIRECTORY =', version_str, file=versions_file)
+			print(file=versions_file)
+
+			versions_list.append((timestamp, version_str))
+			continue
+
+		print('[versions]', file=versions_file)
+
+		for timestamp, section in versions_list:
+			print('\tv%d = %s' % (timestamp, section), file=versions_file)
+		versions_file.close()
+
+		return
