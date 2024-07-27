@@ -31,6 +31,7 @@ class RevisionBuilderCtx:
 		self.onestore = object_space_ctx.onestore
 		self.gosid = object_space_ctx.gosid
 		self.os_index = object_space_ctx.os_index
+		self.verbosity = object_space_ctx.verbosity
 
 		self.revision = revision
 		self.rid:ExGUID = revision.rid
@@ -97,6 +98,8 @@ class ObjectSpaceBuilderCtx:
 		self.object_space = object_space
 		self.os_index = index
 		self.root_revision_id = object_space.GetDefaultContextRevisionId()
+
+		self.verbosity = getattr(options, 'verbosity', 0)
 
 		self.revisions = {}  # All revisions, including meta-revisions
 

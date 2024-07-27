@@ -60,3 +60,17 @@ The file will contain the most current revision of all pages stored in the sourc
 - tag all structures with object IDs (extended GUIDs) in the generated files.
 It allows to match the generated elements against the raw object contents in the log file.
 It's only useful for debugging OneNote file structure.
+
+`--verbose <verbosity>` (`-v <verbosity>`) sets the level of data issued into the generated XML and JSON files.
+
+The following verbosity levels are defined:
+
+`0` - only objects and attributes relevant for content and history parsing.
+Rich text objects are converted from separate text run index and style arrays, and the text string,
+to a single array of text run elements. Empty text objects and *outlines* are dropped.  
+`1` - only objects and attributes relevant for content and history parsing.
+Rich text objects are left as is.  
+`2` - page layout attributes are included.  
+`3` - some extra author and timestamp attributes included.  
+`4` - all objects and attributes, except for those with undocumented IDs.  
+`5` - all objects and attributes, including those with undocumented IDs.

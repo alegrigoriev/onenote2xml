@@ -41,6 +41,9 @@ class PropertySetXmlElementBase:
 			element.set('OID', str(self._oid))
 
 		for prop in self._properties.values():
+			if prop.min_verbosity > revision_ctx.verbosity:
+				continue
+
 			prop_element = prop.MakeXmlElement(revision_ctx)
 			if prop_element is not None:
 				comment:str = prop.MakeXmlComment()
@@ -113,6 +116,7 @@ class xmlParagraphStyleObject(PropertySetXmlElementBase):
 						):
 			prop = self.get(prop_name, None)
 			if prop is not None \
+				and prop.min_verbosity <= self.min_verbosity \
 				and prop.value is not None:
 				comments.append((prop_name, prop.str_value))
 
@@ -123,6 +127,7 @@ class xmlParagraphStyleObject(PropertySetXmlElementBase):
 						):
 			prop = self.get(prop_name[0], None)
 			if prop is not None \
+				and prop.min_verbosity <= self.min_verbosity \
 				and prop.value != 0.0:
 				comments.append((prop_name[1], prop.str_value))
 

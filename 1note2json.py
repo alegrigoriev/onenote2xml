@@ -30,6 +30,8 @@ def main():
 	parser.add_argument("--log", '-L', metavar='<log file>', help="Log file")
 	parser.add_argument("--include-oids", '-o', action="store_true",
 						help="Add Object IDs (OID) attribute to all generated structures")
+	parser.add_argument("--verbose", '-v', dest='verbosity', type=int, default=0, const=1, nargs='?',
+						help="Generated file verbosity: default 0 - basic properties, 1+ - more stuff")
 
 	options = parser.parse_args()
 

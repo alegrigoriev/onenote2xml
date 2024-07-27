@@ -33,6 +33,8 @@ class jsonPropertySetBase:
 			obj['OID'] = str(self._oid)
 
 		for prop in self._properties.values():
+			if prop.min_verbosity > revision_ctx.verbosity:
+				continue
 
 			subobj = prop.MakeJsonValue(revision_ctx)
 			if subobj is NotImplemented:
@@ -156,6 +158,8 @@ class jsonVersionHistoryMetaData(jsonPropertySetBase):
 
 class jsonParagraphStyleObject(jsonPropertySetBase):
 	def MakeJsonNode(self, revision_ctx):
+		if revision_ctx.verbosity > 0:
+			return super().MakeJsonNode(revision_ctx)
 
 		attrs = {}
 		value = getattr(self, 'ParagraphStyleId', '')

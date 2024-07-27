@@ -51,6 +51,10 @@ class XmlRevisionBuilderCtx(RevisionBuilderCtx):
 
 		for role in self.revision_roles:
 			role_tree = self.GetRootObject(role)
+			if role != self.revision.ROOT_ROLE_CONTENTS \
+					and role_tree.min_verbosity > self.verbosity:
+				continue
+
 			root_element = ET.SubElement(revision_element, 'Root',
 									{ 'Role' : str(role)})
 
