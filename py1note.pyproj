@@ -81,6 +81,7 @@
     <Content Include="ONE\STORE\README.md" />
     <Content Include="ONE\XML\README.md" />
     <Content Include="ONE\JSON\README.md" />
+    <Content Include="versions2git.sh" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
