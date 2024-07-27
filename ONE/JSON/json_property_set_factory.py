@@ -19,6 +19,7 @@ from enum import IntEnum
 
 class jsonPropertySetBase:
 	DOC_TYPE = None
+	MAP_PROPERTIES = None
 
 	# We'll make this the top __init__ method by using method dictionary
 	def init(self, jcid, oid):
@@ -54,7 +55,10 @@ class jsonPropertySetBase:
 				from ..exception import OneException
 				raise OneException("Prop %s: objtype %s" % (prop.key_string, objtype.__name__))
 
-			if prop.JSON_KEY is not None:
+			if self.MAP_PROPERTIES is not None \
+				and prop.property_id in self.MAP_PROPERTIES:
+				key = self.MAP_PROPERTIES[prop.property_id]
+			elif prop.JSON_KEY is not None:
 				key = prop.JSON_KEY
 			else:
 				key = prop.key_string
