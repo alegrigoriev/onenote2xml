@@ -38,6 +38,8 @@ def main():
 						help="Generated file verbosity: default 0 - basic properties, 1+ - more stuff")
 	parser.add_argument("--list-revisions", '-l', action="store_true",
 						help="List all revisions to the standard output")
+	parser.add_argument("--combine-revisions", '-c', metavar='<minutes>', default=0, type=int, const=600, nargs='?',
+						help="Maximum time span in minutes, to combine revisions to a single one")
 
 	options = parser.parse_args()
 

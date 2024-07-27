@@ -312,6 +312,10 @@ class ObjectTreeBuilder:
 		self.root_gosid = onestore.GetRootObjectSpaceId()
 		self.versions = None
 		self.version_timestamps = []
+		# The option value is in minutes
+		self.combine_revisions_time_span = getattr(options, 'combine_revisions', 0)
+		# Convert to 100 ns units of Windows FILETIME
+		self.combine_revisions_time_span *= 60 * 1000 * 10000
 
 		# Derived classes MUST do their initialization _before_ invoking super().__init__()
 		os_index = 0
@@ -435,7 +439,8 @@ class ObjectTreeBuilder:
 				continue
 
 			if rev is None \
-				or version_timestamp != rev.LastModifiedTimeStamp \
+				or (version_timestamp != rev.LastModifiedTimeStamp \
+					and version_timestamp - rev.CreatedTimeStamp >= self.combine_revisions_time_span) \
 				or (rev.Author is not None \
 					and Author is not None \
 					and rev.Author != Author):

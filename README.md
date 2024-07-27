@@ -60,6 +60,15 @@ To produce a complete file with all revisions, add `--all-revisions` command lin
 `--all-revisions` (`-A`)
 - include all page revisions to the generated file, not just the most recent versions.
 
+`--combine-revisions <minutes>` (`-c <minutes>`)
+- maximum interval from first to last revision to combine separate edits into a single version,
+to reduce number of insignificant revisions.
+
+	Only revisions edited by same author are combined. By default, revisions are not combined.
+
+	If the option is provided without `<minutes>` specifier,
+it means __600__ minutes (__10__ hours), which covers a single workday.
+
 `--include-oids` (`-o`)
 - tag all structures with object IDs (extended GUIDs) in the generated files.
 It allows to match the generated elements against the raw object contents in the log file.
