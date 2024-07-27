@@ -150,3 +150,30 @@ class JsonTreeBuilder(ObjectTreeBuilder):
 			pages[str(gosid)] = object_space_ctx.MakeAllRevisionsJsonTree()
 			continue
 		return root_dict
+
+	@staticmethod
+	def Validate(obj):
+		import sys
+		if obj is None:
+			return True
+		objtype = type(obj)
+		if objtype is str \
+			or objtype is int \
+			or objtype is float \
+			or objtype is bool:
+			return True
+		elif objtype is dict:
+			for key,subobj in obj.items():
+				if type(key) is not str:
+					print("Type of key %s is %s, should be str" % (key, type(key).__name__), file=sys.stderr)
+					return False
+				if not JsonTreeBuilder.Validate(subobj):
+					return False
+		elif objtype is list or objtype is tuple:
+			for subobj in obj:
+				if not JsonTreeBuilder.Validate(subobj):
+					return False
+		else:
+			print("Object type is %s" % (objtype.__name__), file=sys.stderr)
+			return False
+		return True

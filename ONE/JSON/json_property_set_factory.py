@@ -40,6 +40,17 @@ class jsonPropertySetBase:
 			if subobj is NotImplemented:
 				continue
 
+			objtype = type(subobj)
+			if subobj is not None \
+				and objtype is not str \
+				and objtype is not int \
+				and objtype is not float \
+				and objtype is not dict \
+				and objtype is not list \
+				and objtype is not bool:
+				from ..exception import OneException
+				raise OneException("Prop %s: objtype %s" % (prop.key_string, objtype.__name__))
+
 			obj[prop.key_string] = subobj
 			continue
 		return obj

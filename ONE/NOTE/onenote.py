@@ -104,6 +104,8 @@ class OneNote:
 		if self.log_file is not None:
 			json_builder.dump(self.log_file, options.verbose)
 		root = json_builder.BuildJsonTree(self.ROOT_NODE_NAME, options)
+		if not json_builder.Validate(root):
+			return None
 		return root
 
 	def MakeJsonRevisions(self, directory, options):
