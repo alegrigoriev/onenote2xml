@@ -32,12 +32,18 @@ class PropertySetXmlElementBase:
 	def is_read_only(self):
 		return self._jcid.IsReadOnly()
 
+	def MakeXmlComment(self)->str:
+		return None
+
 	def MakeXmlElement(self, revision_ctx):
 		element = ET.Element(self._jcid_name)
 
 		for prop in self._properties.values():
 			prop_element = prop.MakeXmlElement(revision_ctx)
 			if prop_element is not None:
+				comment:str = prop.MakeXmlComment()
+				if comment:
+					element.append(ET.Comment(' ' + comment + ' '))
 				element.append(prop_element)
 			continue
 		return element
@@ -51,6 +57,14 @@ class PropertySetXmlElementBase:
 
 class xmlReadOnlyPersistablePropertyContainerForAuthor(PropertySetXmlElementBase):
 	READONLY_SPACE = 'Authors'
+
+	def MakeXmlComment(self):
+		comment = 'Author:' + self.Author
+		try:
+			comment += ', Initials:' + self.AuthorInitials
+		except:
+			pass
+		return comment
 
 class xmlReadOnlyAuthor(xmlReadOnlyPersistablePropertyContainerForAuthor): ...
 

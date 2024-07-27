@@ -29,6 +29,9 @@ class xmlPropertyElementBase:
 	def get_xml_text(self):
 		return self.str_value
 
+	def MakeXmlComment(self)->str:
+		return None
+
 	def MakeXmlElement(self, revision_ctx):
 		text = self.get_xml_text()
 
@@ -52,6 +55,10 @@ class xmlBoolProperty(xmlPropertyElementBase): ...
 class xmlGuidProperty(xmlPropertyElementBase): ...
 
 class xmlIntProperty(xmlPropertyElementBase): ...
+
+class xmlPrettyCommentProperty(xmlPropertyElementBase):
+	def MakeXmlComment(self)->str:
+		return self.display_value
 
 class xmlPrettyProperty(xmlPropertyElementBase):
 
@@ -198,6 +205,13 @@ OneNootebookPropertyElementBuilderTemplates = {
 	int(PropertyID.TextRunIndex) : xmlPrettyProperty,  # 0x18001C65
 	int(PropertyID.TableColumnWidths) : xmlPrettyProperty,  # 0x18001C65
 	int(PropertyID.TableColumnsLocked) : xmlPrettyProperty,  # 0x18001C65
+	int(PropertyID.TopologyCreationTimeStamp) : xmlPrettyCommentProperty,  # 0x18001C65
+	int(PropertyID.LastModifiedTimeStamp) : xmlPrettyCommentProperty,  # 0x18001D77
+	int(PropertyID.CreationTimeStamp) : xmlPrettyCommentProperty,  # 0x14001D09
+	int(PropertyID.LastModifiedTime) : xmlPrettyCommentProperty,  # 0x14001D7A
+	int(PropertyID.NoteTagCreated) : xmlPrettyCommentProperty,  # Time32 0x1400346E
+	int(PropertyID.NoteTagCompleted) : xmlPrettyCommentProperty,  # Time32 0x1400346F
+	int(PropertyID.TaskTagDueDate) : xmlPrettyCommentProperty,  # 0x1400346B
 }
 
 DataTypeObjectXmlFactoryDict = {

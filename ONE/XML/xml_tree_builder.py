@@ -80,6 +80,9 @@ class XmlRevisionBuilderCtx(RevisionBuilderCtx):
 			element = propset_obj.MakeXmlElement(self)
 
 		if element is not None:
+			comment:str = propset_obj.MakeXmlComment()
+			if comment:
+				parent_element.append(ET.Comment(' ' + comment + ' '))
 			parent_element.append(element)
 		return
 

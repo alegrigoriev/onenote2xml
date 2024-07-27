@@ -18,6 +18,8 @@ The default implementation of the function makes an element with the property na
 and sets the text to the value returned by `get_xml_text()` member function.
 Most derived classes only need to override `get_xml_text()` function.
 
+`MakeXmlComment()` function generates an optional comment string for the XML element.
+
 `MakeClass` *classmethod* function builds a class object from the provided base class (`PropertyObject` or derived,
 returned by `PropertyObjectFactory.get_property_class()`).
 
@@ -44,6 +46,8 @@ and also exports several *object factories* to create instances of property-set-
 The base class for building an XML element from a property set object. The element is built by `MakeXmlElement()` function.
 The default implementation of the function makes an element with the property set JCID name as the element tag,
 and makes the child sub-elements from its properties by calling their `MakeXmlElement()` function.
+
+`MakeXmlComment()` function generates an optional comment string for the XML element.
 
 `MakeClass` *classmethod* function builds a class object from the provided base class (`PropertySetObject` or derived,
 returned by `PropertySetObjectFactory.get_property_set_class()`).
