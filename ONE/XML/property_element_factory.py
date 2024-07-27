@@ -65,10 +65,7 @@ class xmlArrayOfObjectIdProperty(xmlPropertyElementBase):
 
 		# self.value is the array of child objects constructed by make_object
 		for obj in self.value:
-			if obj is not None:
-				subelement = obj.MakeXmlElement(revision_ctx)
-				if subelement is not None:
-					element.append(subelement)
+			revision_ctx.AppendXmlElementReference(element, obj)
 			continue
 
 		return element

@@ -17,6 +17,17 @@ from ..base_types import *
 from ..NOTE.object_tree_builder import RevisionBuilderCtx,ObjectSpaceBuilderCtx, ObjectTreeBuilder
 from xml.etree import ElementTree as ET
 
+def MakeReadonlyXmlTree(read_only_types_dict):
+	readonly_element = ET.Element('ReadonlyObjects')
+
+	# Generate these items in stable sorted order, to be version control friendly
+	for read_only_type, read_only_type_dict in sorted(read_only_types_dict.items(), key=lambda k: k[0]):
+		readonly_subelement = ET.SubElement(readonly_element, read_only_type)
+		for key, subelement in sorted(read_only_type_dict.items(), key=lambda k: k[0]):
+			subelement.set('OID', key)
+			readonly_subelement.append(subelement)
+	return readonly_element
+
 class XmlRevisionBuilderCtx(RevisionBuilderCtx):
 	def __init__(self, property_set_factory, revision, object_space_ctx):
 		self.compact = getattr(object_space_ctx.options, 'compact', False)
@@ -25,13 +36,17 @@ class XmlRevisionBuilderCtx(RevisionBuilderCtx):
 
 	def GetRevisionXmlTree(self, tag):
 
-		revision_tree = self.GetXmlTree(tag)
+		read_only_types_dict = {}
+		revision_tree = self.GetXmlTree(tag, read_only_types_dict)
+		revision_tree.append(MakeReadonlyXmlTree(read_only_types_dict))
 
 		return revision_tree
 
-	def GetXmlTree(self, tag):
+	def GetXmlTree(self, tag, read_only_types_dict):
 		# All roles are included in the tree
 		revision_element = ET.Element(tag)
+
+		self.read_only_types_dict = read_only_types_dict
 
 		for role in self.revision_roles:
 			role_tree = self.GetRootObject(role)
@@ -42,7 +57,31 @@ class XmlRevisionBuilderCtx(RevisionBuilderCtx):
 			root_element.append(element)
 			continue
 
+		self.read_only_types_dict = None
+
 		return revision_element
+
+	def AppendXmlElementReference(self, parent_element, propset_obj):
+		if propset_obj is None:
+			return
+
+		if propset_obj.is_read_only():
+			# Use one from the read-only object cache (per object space)
+			readonly_space = propset_obj.READONLY_SPACE
+			if readonly_space is NotImplemented:
+				readonly_space = propset_obj._jcid_name
+			read_only_dict = self.read_only_types_dict.setdefault(readonly_space, {})
+			key = str(propset_obj._oid)
+			if key not in read_only_dict:
+				read_only_dict[key] = propset_obj.MakeXmlElement(self)
+
+			element = ET.Element(propset_obj._jcid_name, { "OID" : key, })
+		else:
+			element = propset_obj.MakeXmlElement(self)
+
+		if element is not None:
+			parent_element.append(element)
+		return
 
 class XmlObjectSpaceBuilderCtx(ObjectSpaceBuilderCtx):
 	REVISION_BUILDER = XmlRevisionBuilderCtx

@@ -19,6 +19,7 @@ from ..property_set_jcid import *
 from xml.etree import ElementTree as ET
 
 class PropertySetXmlElementBase:
+	READONLY_SPACE = NotImplemented
 
 	# We'll make this the top __init__ method by using method dictionary
 	def init(self, jcid, oid):
@@ -27,6 +28,9 @@ class PropertySetXmlElementBase:
 		super(type(self), self).__init__(jcid, oid)
 		# TODO: Add initialization here
 		return
+
+	def is_read_only(self):
+		return self._jcid.IsReadOnly()
 
 	def MakeXmlElement(self, revision_ctx):
 		element = ET.Element(self._jcid_name)
@@ -44,6 +48,17 @@ class PropertySetXmlElementBase:
 		new_class.__init__ = cls.init
 		new_class.PROPERTY_FACTORY = xml_property_element_factory
 		return new_class
+
+class xmlReadOnlyPersistablePropertyContainerForAuthor(PropertySetXmlElementBase):
+	READONLY_SPACE = 'Authors'
+
+class xmlReadOnlyAuthor(xmlReadOnlyPersistablePropertyContainerForAuthor): ...
+
+class xmlNoteTagSharedDefinitionContainer(PropertySetXmlElementBase):
+	READONLY_SPACE = 'NoteTags'
+
+class xmlParagraphStyleObject(PropertySetXmlElementBase):
+	READONLY_SPACE = 'ParagraphStyles'
 
 from ..NOTE.property_set_object_factory import PropertySetFactory
 
@@ -83,6 +98,11 @@ class XmlPropertySetFactory:
 		return self.get_property_set_class(jcid)(jcid, oid)
 
 OneNootebookPropertySetElementBuilderTemplates = {
+	PropertySetJCID.jcidReadOnlyPersistablePropertyContainerForAuthor.value :
+						xmlReadOnlyPersistablePropertyContainerForAuthor,
+	PropertySetJCID.jcidParagraphStyleObject.value: xmlParagraphStyleObject,
+	PropertySetJCID.jcidNoteTagSharedDefinitionContainer.value: xmlNoteTagSharedDefinitionContainer,
+	PropertySetJCID.jcidReadOnlyAuthor.value: xmlReadOnlyAuthor,
 }
 
 from ..NOTE.property_set_object_factory import OneNotebookPropertySetFactory
