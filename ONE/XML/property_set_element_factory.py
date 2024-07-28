@@ -126,6 +126,27 @@ class xmlParagraphStyleObject(PropertySetXmlElementBase):
 
 		return ', '.join('%s:%s' % name_value_tuple for name_value_tuple in comments)
 
+class xmlRichTextOENode(PropertySetXmlElementBase):
+
+	def MakeXmlElement(self, revision_ctx):
+		element = super().MakeXmlElement(revision_ctx)
+
+		text_runs_element = ET.SubElement(element, 'TextRuns')
+		for text_run in self.TextRunsArray:
+			subelement = ET.SubElement(text_runs_element, 'TextRun')
+			TextElement = ET.SubElement(subelement, 'Text')
+			TextElement.text = text_run[0]
+			revision_ctx.AppendXmlElementReference(subelement, text_run[1])
+			if text_run[2] is not None:
+				RunData = text_run[2].MakeXmlElement(revision_ctx)
+				RunData.tag = 'RunData'
+				if RunData:
+					# Not empty
+					subelement.append(RunData)
+			continue
+
+		return element
+
 from ..NOTE.property_set_object_factory import PropertySetFactory
 
 class XmlPropertySetFactory:
@@ -169,6 +190,7 @@ OneNootebookPropertySetElementBuilderTemplates = {
 	PropertySetJCID.jcidParagraphStyleObject.value: xmlParagraphStyleObject,
 	PropertySetJCID.jcidNoteTagSharedDefinitionContainer.value: xmlNoteTagSharedDefinitionContainer,
 	PropertySetJCID.jcidReadOnlyAuthor.value: xmlReadOnlyAuthor,
+	PropertySetJCID.jcidRichTextOENode.value: xmlRichTextOENode,
 }
 
 from ..NOTE.property_set_object_factory import OneNotebookPropertySetFactory

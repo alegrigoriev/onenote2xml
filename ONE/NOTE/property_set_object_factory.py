@@ -91,6 +91,46 @@ class jcidOutlineElementNode(PropertySetObject):
 class jcidRichTextOENode(PropertySetObject):
 	JCID = PropertySetJCID.jcidRichTextOENode
 
+	def make_object(self, revision_ctx, property_set:PropertySet):
+		super().make_object(revision_ctx, property_set)
+
+		RichEditTextUnicode = self.get('RichEditTextUnicode', None)
+		TextExtendedAscii = self.get('TextExtendedAscii', None)
+		text_run_index = getattr(self, 'TextRunIndex', [])
+		text_run_data = iter(getattr(self, 'TextRunData', []))
+		text_run_formatting = iter(getattr(self, 'TextRunFormatting', []))
+		lcid = getattr(self, 'RichEditTextLangID', 1033)
+
+		self.TextRunsArray = []
+		prev_index = 0
+		for next_index in *text_run_index, None:
+			if RichEditTextUnicode is not None:
+				if next_index is None: # last index
+					next_index = len(RichEditTextUnicode.data)
+					if next_index == 0:
+						break
+				else:
+					next_index *= 2
+				text = Utf16BytesToStr(RichEditTextUnicode.data[prev_index:next_index])
+			elif TextExtendedAscii is not None:
+				if next_index is None: # last index
+					next_index = len(TextExtendedAscii.data)
+					if next_index == 0:
+						break
+				# TODO: Find 'Charset' property in jcidParagraphStyleObject/jcidParagraphStyleObjectForText
+				charset = 0
+				text = MbcsBytesToStr(TextExtendedAscii.data[prev_index:next_index], lcid, charset)
+			else:
+				break
+
+			run_data = next(text_run_data, None)
+			run_formatting = next(text_run_formatting)
+			self.TextRunsArray.append((text, run_formatting, run_data))
+			prev_index = next_index
+			continue
+
+		return
+
 class jcidImageNode(PropertySetObject):
 	JCID = PropertySetJCID.jcidImageNode
 

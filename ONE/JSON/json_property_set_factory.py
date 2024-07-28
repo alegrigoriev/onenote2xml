@@ -70,6 +70,33 @@ class jsonOutlineElementNode(jsonPropertySetBase):
 class jsonRichTextOENode(jsonPropertySetBase):
 	...
 
+	def MakeJsonNode(self, revision_ctx):
+
+		content = []
+		for text_run in self.TextRunsArray:
+			if not text_run[0]:
+				continue
+
+			text_run_obj = {
+				'text' : text_run[0],
+				'attr' : text_run[1].MakeJsonNode(revision_ctx)
+				}
+			content.append(text_run_obj)
+			continue
+
+		if not content:
+			return None
+		root = {
+			'type' : 'paragraph',
+			'content' : content
+			}
+
+		paragraph_style = getattr(self, 'ParagraphStyle', None)
+		if paragraph_style is not None:
+			root['style'] = paragraph_style.MakeJsonNode(revision_ctx)
+		# TODO: add other elements
+		return root
+
 class jsonImageNode(jsonPropertySetBase):
 	...
 
