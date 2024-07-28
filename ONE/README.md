@@ -7,8 +7,13 @@ This namespace contains the following child namespaces:
 file format;
 
 and basic support modules:
+`property_set_jcid.py`,
 `exception.py`,
 and `base_types.py`.
+
+## `property_set_jcid.py`
+
+This module contains definitions of object IDs (JCID).
 
 ## `exception.py`
 

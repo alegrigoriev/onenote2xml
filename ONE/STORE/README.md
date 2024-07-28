@@ -45,6 +45,11 @@ This module exports a function `RevisionManifestList`, called by `ObjectSpace`,
 which parses a file node list containing a sequence of revision manifests,
 each represented by class `RevisionManifest`.
 
+## `property_set.py`
+
+This module exports function `ObjectSpaceObjectPropSet` which reads a property set object structure from the file,
+at the position and size given by `ref` argument.
+
 # ONESTORE format{#ONESTORE}
 
 The most current format is used for `.one` files. `.onetoc2` (Notebook Table Of Contents) files uses a legacy format.

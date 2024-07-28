@@ -15,6 +15,7 @@
 
 from ..base_types import *
 from ..exception import UnexpectedFileNodeException
+from .property_set import ObjectSpaceObjectPropSet
 from .filenode import FileNodeID as ID
 from .global_id_table import GlobalIdTable
 from .filenode_list import FileNodeList
@@ -49,7 +50,7 @@ ObjectGroupListNodes = {
 	}
 
 class ObjectGroup:
-	def __init__(self, onestore, ref):
+	def __init__(self, onestore, ref, revision):
 		self.DataSignature = None
 
 		node_iter = FileNodeList(onestore, ref, allowed_nodes=ObjectGroupListNodes)
@@ -79,14 +80,16 @@ class ObjectGroup:
 
 			if nid == ID_ObjectDeclaration2RefCountFND \
 			  or nid == ID_ObjectDeclaration2LargeRefCountFND:
-				# TODO: Read the property set
 				assert(not node.body.jcid.IsReadOnly())
 			elif nid == ID_ReadOnlyObjectDeclaration2RefCountFND \
 			  or nid == ID_ReadOnlyObjectDeclaration2LargeRefCountFND:
-				# TODO: Read the read-only property set
 				assert(node.body.jcid.IsReadOnly())
 			# FileNodeList will raise UnexpectedFileNodeException if any other node ID is read
 
+			oid = self.global_id_table[node.body.coid]
+			obj = ObjectSpaceObjectPropSet(onestore, node.BlobRef, node.body.jcid, self.global_id_table)
+			node.prop_set = obj
+			revision.AddObject(oid, obj)
 			continue
 		else:
 			raise UnexpectedFileNodeException("Missing file node ObjectGroupEndFND in Object Group %s NodeList" % (self.ObjectGroupID))

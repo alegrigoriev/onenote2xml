@@ -16,6 +16,7 @@
 from ..base_types import *
 from ..exception import UnexpectedFileNodeException
 from ..exception import RevisionMismatchException
+from .property_set import ObjectSpaceObjectPropSet
 from .filenode import FileNodeID as ID
 from .filenode import ObjectInfoDependencyOverrideData
 from .object_group import ObjectGroup
@@ -127,6 +128,7 @@ class RevisionManifest:
 
 	def __init__(self, onestore, node_iter, node, revisions):
 		self.DataSignatureGroup = None
+		self.objects = {}
 		self.global_id_table = None
 		self.object_groups = {}
 		self.root_objects = {}
@@ -196,10 +198,18 @@ class RevisionManifest:
 				self.DataSignatureGroup = node.DataSignatureGroup
 			elif nid == ID_ObjectDeclarationWithRefCountFNDX \
 			  or nid == ID_ObjectDeclarationWithRefCount2FNDX:
-				... # TODO: Read the property set
+				oid = self.global_id_table[node.body.coid]
+				obj = ObjectSpaceObjectPropSet(onestore, node.ObjectRef, node.body.jcid, self.global_id_table)
+				node.prop_set = obj
+				self.AddObject(oid, obj)
 			elif nid == ID_ObjectRevisionWithRefCountFNDX \
 			  or nid == ID_ObjectRevisionWithRefCount2FNDX:
-				... # TODO: Read the revised property set
+				oid = self.global_id_table[node.coid]
+				# Object's JCID is inherited from the existing definition
+				prev_object = self.GetObjectById(oid)
+				obj = ObjectSpaceObjectPropSet(onestore, node.ref, prev_object.jcid, self.global_id_table)
+				node.prop_set = obj
+				self.AddObject(oid, obj)
 			elif nid == ID_RootObjectReference2FNDX:
 				# [ONESTORE] document doesn't specify that RootObjectReference2FNDX may be after Global ID table
 				self.root_objects[node.RootRole] = self.getExtguidByCompactID(node.coidRoot)
@@ -223,6 +233,21 @@ class RevisionManifest:
 	def getExtguidByCompactID(self, compact_id:CompactID):
 		return self.global_id_table[compact_id]
 
+	def AddObject(self, oid, obj):
+		obj.oid = oid
+		self.objects[oid] = obj
+		return
+
+	def GetObjectById(self, oid):
+		revision = self
+		while revision is not None:
+			obj = revision.objects.get(oid, None)
+			if obj is not None:
+				return obj
+			revision = revision.dep_revision
+			continue
+		return None
+
 	def dump(self, fd):
 		print("\nRevision:", self.rid, file=fd)
 		if self.dep_revision is not None:
@@ -231,5 +256,9 @@ class RevisionManifest:
 			print(" Root object: %s, role: %d" % (obj_id, role), file=fd)
 		for object_group in self.object_groups.values():
 			object_group.dump(fd)
+
+		for extid, obj in self.objects.items():
+			print("\nObjectID:", str(extid), file=fd)
+			obj.dump(fd)
 
 		return
