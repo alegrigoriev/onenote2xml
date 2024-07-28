@@ -74,6 +74,58 @@ class xmlNoteTagSharedDefinitionContainer(PropertySetXmlElementBase):
 class xmlParagraphStyleObject(PropertySetXmlElementBase):
 	READONLY_SPACE = 'ParagraphStyles'
 
+	def MakeXmlComment(self):
+		comments = []
+
+		prop = getattr(self, 'ParagraphStyleId', None)
+		if prop:
+			comments.append(('Style', prop))
+
+		for prop_name in (
+						'Bold',
+						'Italic',
+						'Underline',
+						'Strikethrough',
+						'Subscript',
+						'Superscript',
+						'Hidden',
+						'Hyperlink',
+						'HyperlinkProtected',
+						):
+
+			prop = getattr(self, prop_name, False)
+			if prop:
+				comments.append((prop_name, '1'))
+
+		prop = getattr(self, 'MathFormatting', False)
+		if prop:
+			comments.append(('Math', '1'))
+
+		for prop_name in (
+						'Font',
+						'FontSize',
+						'LanguageID',
+						'Charset',
+						'FontColor',
+						'Highlight',
+						):
+			prop = self.get(prop_name, None)
+			if prop is not None \
+				and prop.value is not None:
+				comments.append((prop_name, prop.str_value))
+
+		for prop_name in (
+						('ParagraphSpaceBefore', 'SpaceBefore'),
+						('ParagraphSpaceAfter', 'SpaceAfter'),
+						('ParagraphLineSpacingExact', 'LineSpacingExact'),
+						):
+			prop = self.get(prop_name[0], None)
+			if prop is not None \
+				and prop.value != 0.0:
+				comments.append((prop_name[1], prop.str_value))
+
+		return ', '.join('%s:%s' % name_value_tuple for name_value_tuple in comments)
+
 from ..NOTE.property_set_object_factory import PropertySetFactory
 
 class XmlPropertySetFactory:
