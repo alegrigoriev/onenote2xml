@@ -111,12 +111,91 @@ class xmlArrayOfPropertyValuesProperty(xmlObjectIdProperty):
 
 class xmlPropertyValueProperty(xmlArrayOfPropertyValuesProperty):  ...
 
+class xmlGuidArrayProperty(xmlPropertyElementBase):
+	def MakeXmlElement(self, revision_ctx):
+		element = ET.Element(self.key_string)
+		for guid in self.value:
+			ET.SubElement(element, 'GUID').text = str(guid)
+		return element
+
+class xmlColorrefProperty(xmlPropertyElementBase):
+
+	def MakeXmlElement(self, revision_ctx):
+		element = ET.Element(self.key_string)
+		rgb = self.value
+		if rgb is None:
+			return element
+
+		if revision_ctx.compact:
+			element.set('Red', str(rgb.R))
+			element.set('Green', str(rgb.G))
+			element.set('Blue', str(rgb.B))
+		else:
+			ET.SubElement(element, 'Red').text = str(rgb.R)
+			ET.SubElement(element, 'Green').text = str(rgb.G)
+			ET.SubElement(element, 'Blue').text = str(rgb.B)
+		return element
+
+class xmlColorProperty(xmlPropertyElementBase):
+
+	def MakeXmlElement(self, revision_ctx):
+		element = ET.Element(self.key_string)
+		rgb = self.value
+		if rgb is None:
+			return element
+
+		if revision_ctx.compact:
+			element.set('Red', str(rgb.R))
+			element.set('Green', str(rgb.G))
+			element.set('Blue', str(rgb.B))
+			element.set('Alpha', str(rgb.A))
+		else:
+			ET.SubElement(element, 'Red').text = str(rgb.R)
+			ET.SubElement(element, 'Green').text = str(rgb.G)
+			ET.SubElement(element, 'Blue').text = str(rgb.B)
+			ET.SubElement(element, 'Alpha').text = str(rgb.A)
+		return element
+
+class xmlLayoutAlignmentProperty(xmlPropertyElementBase):
+
+	def MakeXmlElement(self, revision_ctx):
+		element = ET.Element(self.key_string)
+		alignment = self.value
+		if alignment is None:
+			return element
+
+		if alignment.HorizontalAlignment == 1:
+			hor_align = "Left"
+		elif alignment.HorizontalAlignment == 2:
+			hor_align = "Center"
+		elif alignment.HorizontalAlignment == 3:
+			hor_align = "Right"
+		elif alignment.HorizontalAlignment == 4:
+			hor_align = "StartOfLine"
+		elif alignment.HorizontalAlignment == 5:
+			hor_align = "EndOfLine"
+		else:
+			hor_align = str(alignment.HorizontalAlignment)
+		ET.SubElement(element, 'HorizontalAlignment').text = hor_align
+		ET.SubElement(element, 'fHorizMargin').text = "StartOfLine" if alignment.fHorizMargin else "EndOfLine"
+		ET.SubElement(element, 'VerticalAlignment').text = "Top" if alignment.VerticalAlignment else "Bottom"
+		ET.SubElement(element, 'fVertMargin').text = "Top" if alignment.fVertMargin else "Bottom"
+		return element
+
 # Make derived classes from property_factory and property_set_factory classes
 
 OneNootebookPropertyElementBuilderTemplates = {
+	int(PropertyID.FontColor) : xmlColorrefProperty,
+	int(PropertyID.Highlight) : xmlColorrefProperty,
+	int(PropertyID.CellShadingColor) : xmlColorrefProperty,
+	int(PropertyID.NoteTagHighlightColor) : xmlColorrefProperty,
+	int(PropertyID.NoteTagTextColor) : xmlColorrefProperty,
+	int(PropertyID.CellShadingColor) : xmlColorrefProperty,
+	int(PropertyID.NotebookColor) : xmlColorProperty,
+	int(PropertyID.LayoutAlignmentInParent) : xmlLayoutAlignmentProperty,
+	int(PropertyID.LayoutAlignmentSelf) : xmlLayoutAlignmentProperty,
 	int(PropertyID.NotebookManagementEntityGuid) : xmlGuidProperty,  # 0x1C001C30.
-	0x1C0035CD : xmlGuidProperty,  # 0x1C0035CD
-	0x1C005010 : xmlGuidProperty,  # 0x1C005010
+	int(PropertyID.AudioRecordingGuids): xmlGuidArrayProperty,
 
 	int(PropertyID.RgOutlineIndentDistance) : xmlPrettyProperty,  # 0x18001C65
 	int(PropertyID.TextRunIndex) : xmlPrettyProperty,  # 0x18001C65
@@ -189,6 +268,7 @@ OneNotebookPropertyElementFactory = XmlPropertyElementObjectFactory(OneNotebookP
 																	OneNootebookPropertyElementBuilderTemplates)
 
 OneToc2PropertyElementBuilderTemplates = {
+	int(PropertyID.NotebookColor): xmlColorProperty, # 0x14001CBE
 }
 
 from ..NOTE.property_object_factory import OneToc2PropertyFactory
