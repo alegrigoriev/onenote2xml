@@ -130,12 +130,51 @@ class jsonPropertyValueProperty(jsonArrayOfPropertyValuesProperty):
 			return array[0]
 		return None
 
+class jsonColorrefProperty(jsonStringProperty): ...
+
+class jsonColorProperty(jsonColorrefProperty): ...
+
+class jsonLayoutAlignmentProperty(jsonPropertyBase):
+
+	def MakeJsonValue(self, revision_ctx):
+		alignment = self.value
+		if alignment is None:
+			return None
+		attrs = {}
+		if alignment.HorizontalAlignment == 1:
+			hor_align = "Left"
+		elif alignment.HorizontalAlignment == 2:
+			hor_align = "Center"
+		elif alignment.HorizontalAlignment == 3:
+			hor_align = "Right"
+		elif alignment.HorizontalAlignment == 4:
+			hor_align = "StartOfLine"
+		elif alignment.HorizontalAlignment == 5:
+			hor_align = "EndOfLine"
+		else:
+			hor_align = str(alignment.HorizontalAlignment)
+		attrs['HorizontalAlignment'] = hor_align
+		attrs['fHorizMargin'] = "StartOfLine" if alignment.fHorizMargin else "EndOfLine"
+		attrs['VerticalAlignment'] = "Top" if alignment.VerticalAlignment else "Bottom"
+		attrs['fVertMargin'] = "Top" if alignment.fVertMargin else "Bottom"
+		return attrs
+
 # Make derived classes from property_factory and property_set_factory classes
 
 OneNootebookPropertyJsonBuilderTemplates = {
 	int(PropertyID.NotebookManagementEntityGuid) : jsonGuidProperty,  # 0x1C001C30.
 	0x1C0035CD : jsonGuidProperty,  # 0x1C0035CD
 	0x1C005010 : jsonGuidProperty,  # 0x1C005010
+
+	int(PropertyID.FontColor) : jsonColorrefProperty,
+	int(PropertyID.Highlight) : jsonColorrefProperty,
+	int(PropertyID.CellShadingColor) : jsonColorrefProperty,
+	int(PropertyID.NoteTagHighlightColor) : jsonColorrefProperty,
+	int(PropertyID.NoteTagTextColor) : jsonColorrefProperty,
+	int(PropertyID.CellShadingColor) : jsonColorrefProperty,
+	int(PropertyID.NotebookColor) : jsonColorProperty,
+	int(PropertyID.LayoutAlignmentInParent) : jsonLayoutAlignmentProperty,
+	int(PropertyID.LayoutAlignmentSelf) : jsonLayoutAlignmentProperty,
 }
 
 DataTypeObjectJsonFactoryDict = {
@@ -204,7 +243,7 @@ OneNotebookJsonPropertyFactory = JsonPropertyObjectFactory(OneNotebookPropertyFa
 
 OneToc2PropertyJsonBuilderTemplates = {
 	int(PropertyID.FileIdentityGuid) : jsonGuidProperty,
-	int(PropertyID.NotebookColor) : jsonStringProperty,
+	int(PropertyID.NotebookColor) : jsonColorProperty,
 }
 
 from ..NOTE.property_object_factory import OneToc2PropertyFactory
