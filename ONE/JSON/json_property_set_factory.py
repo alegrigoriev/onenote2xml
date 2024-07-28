@@ -122,7 +122,35 @@ class jsonVersionHistoryMetaData(jsonPropertySetBase):
 	...
 
 class jsonParagraphStyleObject(jsonPropertySetBase):
-	...
+	def MakeJsonNode(self, revision_ctx):
+
+		attrs = {}
+		value = getattr(self, 'ParagraphStyleId', '')
+		if value: attrs['id'] = value
+
+		for prop_name, json_name in (
+						('Bold', 'bold'),
+						('Italic', 'italic'),
+						('Underline', 'underline'),
+						('Strikethrough', 'strikethrough'),
+						('Subscript', 'subscript'),
+						('Superscript', 'superscript'),
+						('Hidden', 'hidden'),
+						('Hyperlink', 'hyperlink'),
+						('HyperlinkProtected', 'hyperlink_protected'),
+						('MathFormatting', 'math'),
+						('Font', 'font'),
+						('FontSize', 'font_size'),
+						('LanguageID', 'language_id'),
+						('Charset', 'charset'),
+						('FontColor', 'font_color'),
+						('Highlight', 'highlight'),
+						):
+			prop = self.get(prop_name, None)
+			if prop is not None:
+				attrs[json_name] = prop.MakeJsonValue(revision_ctx)
+
+		return attrs
 
 class jsonEmbeddedFileContainer(jsonPropertySetBase):
 	...
