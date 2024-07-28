@@ -193,7 +193,8 @@ class jsonParagraphStyleObject(jsonPropertySetBase):
 		return attrs
 
 class jsonEmbeddedFileContainer(jsonPropertySetBase):
-	...
+	def MakeJsonNode(self, revision_ctx):
+		return { 'Filename' : self._filename }
 
 class jsonPictureContainer14(jsonEmbeddedFileContainer): ...
 

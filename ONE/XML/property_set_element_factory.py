@@ -157,6 +157,24 @@ class xmlRichTextOENode(PropertySetXmlElementBase):
 
 		return element
 
+class xmlEmbeddedFileContainer(PropertySetXmlElementBase):
+
+	def MakeXmlElement(self, revision_ctx):
+		element = ET.Element(self._jcid_name)
+		ET.SubElement(element, 'Filename').text = self._filename
+		return element
+
+	def MakeXmlComment(self)->str:
+		comments = []
+		if self._guid is not None:
+			comments.append("GUID:%s" % (self._guid,))
+
+		if self._data is not None:
+			comments.append("%d bytes" % (len(self._data),))
+		return ', '.join(comments)
+
+class xmlPictureContainer14(xmlEmbeddedFileContainer): ...
+
 from ..NOTE.property_set_object_factory import PropertySetFactory
 
 class XmlPropertySetFactory:
@@ -201,6 +219,8 @@ OneNootebookPropertySetElementBuilderTemplates = {
 	PropertySetJCID.jcidNoteTagSharedDefinitionContainer.value: xmlNoteTagSharedDefinitionContainer,
 	PropertySetJCID.jcidReadOnlyAuthor.value: xmlReadOnlyAuthor,
 	PropertySetJCID.jcidRichTextOENode.value: xmlRichTextOENode,
+	PropertySetJCID.jcidEmbeddedFileContainer.value: xmlEmbeddedFileContainer,
+	PropertySetJCID.jcidPictureContainer14.value: xmlPictureContainer14,
 }
 
 from ..NOTE.property_set_object_factory import OneNotebookPropertySetFactory

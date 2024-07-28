@@ -32,6 +32,33 @@ def GetTopologyCreationTimeStamps(obj):
 		continue
 	return sorted(timestamps, key=lambda t:t.TopologyCreationTimeStamp, reverse=True)
 
+class DataFileCtx:
+	def __init__(self, filename, data):
+		self.data = data
+		self.filename = filename
+		self.page_persistent_guid = filename
+		return
+
+	def MakeFile(self, directory, guid):
+		full_path = Path(directory, self.filename)
+		full_path.write_bytes(self.data)
+		return
+
+	def IsFile(self):
+		return True
+
+	def GetFilename(self):
+		return self.filename
+
+	def GetHash(self):
+		return b''
+
+	def GetData(self):
+		return self.data
+
+	def GetTitle(self):
+		return None
+
 class RevisionBuilderCtx:
 	ROOT_ROLE_CONTENTS = RevisionManifest.ROOT_ROLE_CONTENTS
 	ROOT_ROLE_PAGE_METADATA = RevisionManifest.ROOT_ROLE_PAGE_METADATA
@@ -53,6 +80,7 @@ class RevisionBuilderCtx:
 
 		self.revision_roles = {}
 		self.obj_dict = {}
+		self.data_objects = {}
 		self.page_persistent_guid:GUID = None
 		self.filename = None
 		self.page_title = 'notitle'
@@ -112,6 +140,27 @@ class RevisionBuilderCtx:
 		obj = self.property_set_factory(prop_set.jcid, oid)	# Never None
 		obj.make_object(self, prop_set)
 		return obj
+
+	def GetDataStoreObject(self, guid, extension):
+		filename = str(guid) + extension
+		obj = self.data_objects.get(filename, None)
+		if obj is None:
+			obj = DataFileCtx(filename, self.onestore.GetDataStoreObjectData(guid))
+			obj.os_index = self.os_index
+			self.data_objects[filename] = obj
+		return obj
+
+	def ReadOnefile(self, onefilename, extension):
+		filename = onefilename + extension
+		obj = self.data_objects.get(filename, None)
+		if obj is None:
+			obj = DataFileCtx(filename, self.onestore.ReadOnefile(onefilename))
+			obj.os_index = self.os_index
+			self.data_objects[filename] = obj
+		return obj
+
+	def IsFile(self):
+		return False
 
 	def GetFilename(self):
 		return self.filename or self.page_persistent_guid
@@ -373,6 +422,9 @@ class ObjectTreeBuilder:
 			version_tree = {}
 			for guid, revision_ctx in sorted_version_tree:
 				version_tree[guid] = revision_ctx
+				for guid, data_obj in revision_ctx.data_objects.items():
+					version_tree[guid] = data_obj
+
 				continue
 
 			# Sort in GUID (first item in the tuples) order
@@ -410,6 +462,8 @@ class ObjectTreeBuilder:
 
 		with open(Path(directory, 'index.txt'), 'wt') as pages_file:
 			for item_ctx in version.directory.values():
+				if item_ctx.IsFile():
+					continue
 				print("%s:%s" % (item_ctx.GetFilename(), item_ctx.GetTitle()), file=pages_file)
 		return
 

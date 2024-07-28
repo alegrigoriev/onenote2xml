@@ -482,6 +482,42 @@ class jcidReadOnlyAuthor(PropertySetObject):
 class jcidEmbeddedFileContainer(PropertySetObject):
 	JCID = PropertySetJCID.jcidEmbeddedFileContainer
 
+	def __init__(self, jcid, oid):
+		super().__init__(jcid, oid)
+		self._data:bytes = None
+		self._guid = None
+		self._filename = None
+		return
+
+	def make_object(self, revision_ctx, file_data_object):
+		# file_data_object is a FileDataObject object, not PropertySet
+		# Locate binary data either in onestore.FileDataStoreList,
+		# or from a file in onefiles directory
+		md5hash = md5(usedforsecurity=False)
+		md5hash.update(self._jcid.jcid.to_bytes(4, byteorder='little', signed=False))
+
+		self._guid = str(file_data_object.guid)
+		self._extension = file_data_object.extension
+		if file_data_object.guid is not None:
+			data_ctx = revision_ctx.GetDataStoreObject(file_data_object.guid, file_data_object.extension)
+		elif self._filename is not None:
+			data_ctx = revision_ctx.ReadOnefile(file_data_object.filename, file_data_object.extension)
+		else:
+			data_ctx = None
+
+		if data_ctx is not None:
+			self._data = data_ctx.GetData()
+			self._filename = data_ctx.GetFilename()
+			md5hash.update(self._filename.encode())
+
+		if self._data:
+			self.min_verbosity = 0
+			md5hash.update(len(self._data).to_bytes(4, byteorder='little', signed=False))
+			md5hash.update(self._data)
+
+		self.md5 = md5hash.digest()
+		return
+
 class jcidPictureContainer14(jcidEmbeddedFileContainer):
 	JCID = PropertySetJCID.jcidPictureContainer14
 

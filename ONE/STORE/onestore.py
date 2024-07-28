@@ -119,6 +119,7 @@ class OneStoreFile:
 		self.log_file = log_file
 		self.RootObjectSpaceId = None
 		self.FileDataStoreList = None
+		self.OnefileDir = {}
 		self.ObjectSpaces = {}
 
 		verbose = getattr(options, 'verbose', None)
@@ -224,6 +225,17 @@ class OneStoreFile:
 
 	def GetDataStoreObjectData(self, guid):
 		return self.FileDataStoreList.get(guid, None).GetData()
+
+	def ReadOnefile(self, filename):
+		from pathlib import Path
+		data = self.OnefileDir.get(filename, None)
+		if data is not None:
+			return
+
+		path = Path(self.filename).with_suffix('').with_suffix('_onefiles').joinpath(filename).with_suffix('.onebin')
+		data = path.read_bytes()
+		self.OnefileDir[filename] = data
+		return data
 
 	@staticmethod
 	def open(filename, options, log_file=None)->OneStoreFile:
