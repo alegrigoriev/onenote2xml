@@ -185,12 +185,32 @@ class xmlPersistablePropertyContainerForTOC(PropertySetXmlElementBase):
 	JCID = TocPropertySetJCID.jcidPersistablePropertyContainerForTOC
 	JCID_CLASS:IntEnum = TocPropertySetJCID
 
+	def make_object(self, revision_ctx, property_set):
+		prev_property_set_factory = revision_ctx.property_set_factory
+
+		revision_ctx.property_set_factory = OneToc2SectionPropertySetXmlFactory
+
+		super(type(self), self).make_object(revision_ctx, property_set)
+
+		revision_ctx.property_set_factory = prev_property_set_factory
+		return
+
+	@staticmethod
+	def MakeClass(cls, base_class, xml_property_element_factory):
+		new_class = PropertySetXmlElementBase.MakeClass(base_class, xml_property_element_factory)
+		new_class.make_object = cls.make_object
+		return new_class
+
 PropertyContainerForTOCTemplates = {
 	TocPropertySetJCID.jcidPersistablePropertyContainerForTOC.value :
 						xmlPersistablePropertyContainerForTOC,
 }
 
+# Directory sections: jcidPersistablePropertyContainerForTOCSection
+from ..NOTE.property_set_object_factory import OneToc2SectionPropertySetFactory
 from .property_element_factory import OneToc2PropertyElementFactory
+OneToc2SectionPropertySetXmlFactory = XmlPropertySetFactory(OneToc2SectionPropertySetFactory,
+															OneToc2PropertyElementFactory)
 
 OneToc2XmlPropertySetFactory = XmlPropertySetFactory(OneToc2PropertySetFactory,
 													 OneToc2PropertyElementFactory,

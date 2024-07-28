@@ -188,6 +188,16 @@ OneNotebookPropertySetFactoryDict = {
 	int(PropertySetJCID.jcidPictureContainer14): jcidPictureContainer14,
 	}
 
+class jcidPersistablePropertyContainerForTOCSection(PropertySetObject):
+	JCID = TocSectionPropertySetJCID.jcidPersistablePropertyContainerForTOCSection
+	JCID_CLASS:IntEnum = TocSectionPropertySetJCID
+	from .property_object_factory import OneToc2PropertyFactory as PROPERTY_FACTORY
+
+OneToc2PropertySetSectionFactoryDict = {
+	int(TocSectionPropertySetJCID.jcidPersistablePropertyContainerForTOCSection) :
+								jcidPersistablePropertyContainerForTOCSection,
+}
+
 class jcidPersistablePropertyContainerForTOC(PropertySetObject):
 	JCID = TocPropertySetJCID.jcidPersistablePropertyContainerForTOC
 	JCID_CLASS:IntEnum = TocPropertySetJCID
@@ -216,4 +226,8 @@ class PropertySetFactory:
 
 OneNotebookPropertySetFactory = PropertySetFactory(OneNotebookPropertySetFactoryDict)
 
+# Section descriptors:
+OneToc2SectionPropertySetFactory = PropertySetFactory(OneToc2PropertySetSectionFactoryDict, TocSectionPropertySetJCID)
+
+# Top level directory
 OneToc2PropertySetFactory = PropertySetFactory(OneToc2PropertySetFactoryDict, TocPropertySetJCID)
