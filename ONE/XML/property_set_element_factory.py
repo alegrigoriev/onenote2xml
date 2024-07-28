@@ -200,6 +200,19 @@ OneNotebookXmlPropertySetFactory = XmlPropertySetFactory(OneNotebookPropertySetF
 												OneNootebookPropertySetElementBuilderTemplates)
 
 
+from ..NOTE.property_set_object_factory import NoteOnlineParagraphStyleObjectFactory
+class xmlNoteOnlineParagraphStyle(xmlParagraphStyleObject):
+	def is_read_only(self): return True
+
+NoteOnlineParagraphStyleTemplates = {
+	NoteOnlineParagraphStylePropertySetJCID.jcidNoteOnlineParagraphStyle.value :
+						xmlNoteOnlineParagraphStyle,
+}
+
+NoteOnlineParagraphStyleXmlFactory = XmlPropertySetFactory(NoteOnlineParagraphStyleObjectFactory,
+												OneNotebookPropertyElementFactory,
+												NoteOnlineParagraphStyleTemplates)
+
 # Upper directory level object: jcidPersistablePropertyContainerForTOC structures
 from ..NOTE.property_set_object_factory import OneToc2PropertySetFactory
 

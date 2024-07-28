@@ -248,6 +248,15 @@ OneToc2PropertySetFactoryDict = {
 						jcidPersistablePropertyContainerForTOC,
 }
 
+class jcidNoteOnlineParagraphStyle(PropertySetObject):
+	JCID_CLASS:IntEnum = NoteOnlineParagraphStylePropertySetJCID
+	JCID = NoteOnlineParagraphStylePropertySetJCID.jcidNoteOnlineParagraphStyle
+
+NoteOnlineParagraphStyleFactoryDict = {
+	int(NoteOnlineParagraphStylePropertySetJCID.jcidNoteOnlineParagraphStyle) :
+						jcidNoteOnlineParagraphStyle,
+}
+
 class PropertySetFactory:
 	def __init__(self, property_set_dict:dict={}, jcid_class=PropertySetJCID, default_class=PropertySetObject):
 		self.property_set_dict = property_set_dict
@@ -263,6 +272,8 @@ class PropertySetFactory:
 
 	def __call__(self, jcid:JCID, oid:ExGUID):
 		return self.get_property_set_class(jcid)(jcid, oid)
+
+NoteOnlineParagraphStyleObjectFactory = PropertySetFactory(NoteOnlineParagraphStyleFactoryDict, NoteOnlineParagraphStylePropertySetJCID)
 
 OneNotebookPropertySetFactory = PropertySetFactory(OneNotebookPropertySetFactoryDict)
 

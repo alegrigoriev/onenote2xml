@@ -115,6 +115,25 @@ class xmlArrayOfPropertyValuesProperty(xmlObjectIdProperty):
 
 class xmlPropertyValueProperty(xmlArrayOfPropertyValuesProperty):  ...
 
+class xmlNoteOnlineParagraphStyleProperty(xmlObjectIdProperty):
+
+	def make_object(self, property_set_obj, revision_ctx):
+		prev_property_set_factory = revision_ctx.property_set_factory
+
+		from .property_set_element_factory import NoteOnlineParagraphStyleXmlFactory
+		revision_ctx.property_set_factory = NoteOnlineParagraphStyleXmlFactory
+
+		super(type(self), self).make_object(property_set_obj, revision_ctx)
+
+		revision_ctx.property_set_factory = prev_property_set_factory
+		return
+
+	@classmethod
+	def MakeClass(cls, base_class):
+		new_class = xmlObjectIdProperty.MakeClass(base_class)
+		new_class.make_object = cls.make_object
+		return new_class
+
 class xmlGuidArrayProperty(xmlPropertyElementBase):
 	def MakeXmlElement(self, revision_ctx):
 		element = ET.Element(self.key_string)
@@ -200,6 +219,7 @@ OneNootebookPropertyElementBuilderTemplates = {
 	int(PropertyID.LayoutAlignmentSelf) : xmlLayoutAlignmentProperty,
 	int(PropertyID.NotebookManagementEntityGuid) : xmlGuidProperty,  # 0x1C001C30.
 	int(PropertyID.AudioRecordingGuids): xmlGuidArrayProperty,
+	int(PropertyID.NoteOnlineParagraphStyle) : xmlNoteOnlineParagraphStyleProperty,  # 0x20001CE2.
 
 	int(PropertyID.RgOutlineIndentDistance) : xmlPrettyProperty,  # 0x18001C65
 	int(PropertyID.TextRunIndex) : xmlPrettyProperty,  # 0x18001C65

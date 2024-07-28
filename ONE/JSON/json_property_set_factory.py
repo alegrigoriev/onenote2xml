@@ -248,6 +248,18 @@ OneNotebookJsonPropertySetFactory = JsonPropertySetFactory(OneNotebookPropertySe
 												OneNotebookJsonPropertyFactory,
 												OneNootebookJsonPropertySetDocBuilderTemplates)
 
+from ..NOTE.property_set_object_factory import NoteOnlineParagraphStyleObjectFactory
+class jsonNoteOnlineParagraphStyle(jsonParagraphStyleObject): ...
+
+NoteOnlineParagraphStyleTemplates = {
+	NoteOnlineParagraphStylePropertySetJCID.jcidNoteOnlineParagraphStyle.value :
+						jsonNoteOnlineParagraphStyle,
+}
+
+NoteOnlineParagraphStyleJsonFactory = JsonPropertySetFactory(NoteOnlineParagraphStyleObjectFactory,
+												OneNotebookJsonPropertyFactory,
+												NoteOnlineParagraphStyleTemplates)
+
 from ..NOTE.property_set_object_factory import OneToc2PropertySetFactory
 TocPropertySetJCID = OneToc2PropertySetFactory.get_jcid_class()
 

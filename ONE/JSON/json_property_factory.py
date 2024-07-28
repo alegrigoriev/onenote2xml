@@ -130,6 +130,24 @@ class jsonPropertyValueProperty(jsonArrayOfPropertyValuesProperty):
 			return array[0]
 		return None
 
+class jsonNoteOnlineParagraphStyleProperty(jsonObjectIdProperty):
+
+	def make_object(self, property_set_obj, revision_ctx):
+		prev_property_set_factory = revision_ctx.property_set_factory
+
+		from .json_property_set_factory import NoteOnlineParagraphStyleJsonFactory
+		revision_ctx.property_set_factory = NoteOnlineParagraphStyleJsonFactory
+
+		super(type(self), self).make_object(property_set_obj, revision_ctx)
+		revision_ctx.property_set_factory = prev_property_set_factory
+		return
+
+	@classmethod
+	def MakeClass(cls, base_class):
+		new_class = jsonObjectIdProperty.MakeClass(base_class)
+		new_class.make_object = cls.make_object
+		return new_class
+
 class jsonColorrefProperty(jsonStringProperty): ...
 
 class jsonColorProperty(jsonColorrefProperty): ...
@@ -175,6 +193,7 @@ OneNootebookPropertyJsonBuilderTemplates = {
 	int(PropertyID.NotebookColor) : jsonColorProperty,
 	int(PropertyID.LayoutAlignmentInParent) : jsonLayoutAlignmentProperty,
 	int(PropertyID.LayoutAlignmentSelf) : jsonLayoutAlignmentProperty,
+	int(PropertyID.NoteOnlineParagraphStyle): jsonNoteOnlineParagraphStyleProperty,
 }
 
 DataTypeObjectJsonFactoryDict = {
