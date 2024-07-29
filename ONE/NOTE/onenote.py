@@ -68,6 +68,11 @@ class OneNote:
 						short_empty_elements=getattr(options, 'short_empty_elements', True))
 		return
 
+	def MakeXmlRevisions(self, directory, options):
+		xml_builder = self.GetXmlBuilder(options)
+		xml_builder.MakeVersionFiles(directory, options)
+		return
+
 	def MakeXmlTree(self, options):
 		xml_builder = self.GetXmlBuilder(options)
 		if self.log_file is not None:
@@ -100,6 +105,11 @@ class OneNote:
 			json_builder.dump(self.log_file, options.verbose)
 		root = json_builder.BuildJsonTree(self.ROOT_NODE_NAME, options)
 		return root
+
+	def MakeJsonRevisions(self, directory, options):
+		json_builder = self.GetJsonBuilder(options)
+		json_builder.MakeVersionFiles(directory, options)
+		return
 
 	def dump(self, fd, verbose=None):
 		self.onestore.dump(fd, verbose)

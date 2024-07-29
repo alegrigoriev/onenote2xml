@@ -27,6 +27,8 @@ def main():
 	parser.add_argument("onefile", metavar='<onefile>', help="Source '.one' or '.onetoc2' Microsoft OneNote file")
 	parser.add_argument("--output", '-O', metavar='<json-filename>',
 						help="Filename of output JSON file")
+	parser.add_argument("--output-directory", '-R', dest='output_dir', metavar='<json-directory>',
+						help="Directory name for writing revision JSON files")
 	parser.add_argument("--log", '-L', metavar='<log file>', help="Log file")
 	parser.add_argument("--all-revisions", '-A', action="store_true",
 						help="Include all revisions in the output, not just the current snapshot")
@@ -59,6 +61,13 @@ def main():
 	if options.output:
 		print("Making JSON file %s..." % (options.output,), file=sys.stderr, end='', flush=True)
 		onenote.MakeJsonFile(options.output, options)
+		print("done", file=sys.stderr)
+
+	if options.output_dir:
+		if onenote.IsNotebookToc2():
+			raise OneException("'--output-directory' option not applicable to .onetoc2 file")
+		print("Making JSON revisions in %s..." % (options.output_dir,), file=sys.stderr)
+		onenote.MakeJsonRevisions(options.output_dir, options)
 		print("done", file=sys.stderr)
 
 	if options.list_revisions:

@@ -32,6 +32,8 @@ class XmlRevisionBuilderCtx(RevisionBuilderCtx):
 	def __init__(self, property_set_factory, revision, object_space_ctx):
 		self.compact = getattr(object_space_ctx.options, 'compact', False)
 		self.include_oids = getattr(object_space_ctx.options, 'include_oids', False)
+		self.filename = None
+		self.full_path = None
 		super().__init__(property_set_factory, revision, object_space_ctx)
 		return
 
@@ -98,6 +100,25 @@ class XmlRevisionBuilderCtx(RevisionBuilderCtx):
 			if comment:
 				parent_element.append(ET.Comment(' ' + comment + ' '))
 			parent_element.append(element)
+		return
+
+	def MakeFile(self, directory, guid):
+		from pathlib import Path
+
+		self.filename = guid + '.xml'
+		self.full_path = Path(directory, self.filename)
+
+		xml_tree = self.GetRevisionXmlTree('Page')
+
+		element_tree = ET.ElementTree(xml_tree)
+		ET.indent(element_tree, '  ')
+
+		with open(self.full_path, 'wb') as file:  # element_tree.write does its own encoding
+			element_tree.write(file,
+						# Use default 'ascii' encoding to encode extended characters as escape sequences
+						encoding='ascii',
+						xml_declaration=True,
+						short_empty_elements=True)
 		return
 
 class XmlObjectSpaceBuilderCtx(ObjectSpaceBuilderCtx):

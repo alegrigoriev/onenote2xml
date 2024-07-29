@@ -19,6 +19,8 @@ from ..NOTE.object_tree_builder import *
 class JsonRevisionTreeBuilderCtx(RevisionBuilderCtx):
 	def __init__(self, property_set_factory, revision, object_space_ctx):
 		self.include_oids = getattr(object_space_ctx.options, 'include_oids', False)
+		self.filename = None
+		self.full_path = None
 		super().__init__(property_set_factory, revision, object_space_ctx)
 		return
 
@@ -31,6 +33,19 @@ class JsonRevisionTreeBuilderCtx(RevisionBuilderCtx):
 			obj.update(role_tree.MakeJsonNode(self))
 
 		return obj
+
+	def MakeFile(self, directory, guid):
+		from pathlib import Path
+		import json
+
+		self.filename = guid + '.json'
+		self.full_path = Path(directory, self.filename)
+
+		obj_tree = self.MakeJsonTree()
+
+		with open(self.full_path, 'wt') as file:
+			json.dump(obj_tree, file, indent='\t')
+		return
 
 class JsonObjectSpaceBuilderCtx(ObjectSpaceBuilderCtx):
 	REVISION_BUILDER = JsonRevisionTreeBuilderCtx

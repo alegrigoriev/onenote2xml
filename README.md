@@ -80,3 +80,19 @@ Rich text objects are left as is.
 `3` - some extra author and timestamp attributes included.  
 `4` - all objects and attributes, except for those with undocumented IDs.  
 `5` - all objects and attributes, including those with undocumented IDs.
+
+`--output-directory <directory>` (`-R <directory>`)
+- A directory name for writing all pages of the OneNote section (a `.one` file)
+as separate `.xml` or `.json` files per page in the given directory.
+Each page file is named according to its persistent GUID.
+This option is not applicable to `parse1note.py`, and cannot be used for `.onetoc2` file.
+The directory also contains `index.txt` file, which lists all pages by filename and their titles.
+
+	The program gives a warning if the directory exists and not empty.
+
+	By default, only the most recent version is written.
+To save all versions, add `--all-revisions` command line option.
+The versions will be saved as separate directories, named with the version timestamp.
+
+	If `--all-revisions` command line option is present, the root of the output directory will contain
+`versions.txt` file, which describes all version metadata.
