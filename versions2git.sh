@@ -59,6 +59,7 @@ git config --file "$versions_file" --get-regexp 'versions\.v.+' | {
 			TIMESTAMP=
 			DIRECTORY=
 			AUTHOR=
+			MESSAGE=
 
 			while read key value
 			do
@@ -85,6 +86,14 @@ git config --file "$versions_file" --get-regexp 'versions\.v.+' | {
 				then
 					DIRECTORY="$value"
 					cp "$versions_dir/$DIRECTORY/index.txt" -t "$git_dir"
+				elif [ $key = title ]
+				then
+					MESSAGE="$value
+"
+				elif [ $key = message ]
+				then
+					MESSAGE="$MESSAGE
+$value"
 				fi
 			done
 
@@ -102,7 +111,7 @@ git config --file "$versions_file" --get-regexp 'versions\.v.+' | {
 
 			# Update the index
 			git -C "$git_dir" -c core.safecrlf=false -c core.autocrlf=true add -- .
-			git -C "$git_dir" commit --quiet -m "Edited by $AUTHOR on $PRETTY_DATE"
+			git -C "$git_dir" commit --quiet -m "$MESSAGE"
 		}
 
 	done

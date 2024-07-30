@@ -605,18 +605,45 @@ class ObjectTreeBuilder:
 							key=sort_key)
 			deleted = sorted((prev_directory[guid] for guid in set(prev_directory) - set(version.directory)),
 							key=sort_key)
+			# messages will contain tuples of (guid, msg)
+			messages = []
 
 			for item_ctx in added:
 				print('\tADDED = %s' + item_ctx.GetFilename(), file=versions_file)
+				if title := item_ctx.GetTitle():
+					messages.append((item_ctx, 'Added page: ' + title))
 				continue
 
 			for item_ctx in changed:
 				print('\tMODIFIED = ' + item_ctx.GetFilename(), file=versions_file)
+				if title := item_ctx.GetTitle():
+					messages.append((item_ctx, 'Modified page: ' + title))
 				continue
 
 			for item_ctx in deleted:
 				print('\tDELETED = ' + item_ctx.GetFilename(), file=versions_file)
+				if title := item_ctx.GetTitle():
+					messages.append((item_ctx, 'Deleted page: ' + title))
 				continue
+
+			if len(messages) == 1:
+				title = messages[0][1]
+				messages.clear()
+			else:
+				if added:
+					title = "Added"
+					if changed:
+						title += ", modified"
+				elif changed:
+					title = "Modified"
+
+				if deleted:
+					title += ", deleted" if title else "Deleted"
+				title += ' pages'
+			print('\tTITLE = ' + title, file=versions_file)
+
+			for _, msg in sorted(messages, key=lambda rev: rev[0].os_index):
+				print('\tMESSAGE = ' + msg, file=versions_file)
 
 			print(file=versions_file)
 
