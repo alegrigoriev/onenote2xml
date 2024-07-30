@@ -46,13 +46,8 @@ then
 fi
 
 EMAIL="$(git -C "$git_dir" config --get user.email)"
-incremental=false
-if [ "$(git config --file "$versions_file" --get --type bool 'versions.incremental')" = true ]
-then
-	incremental=true
-	echo "Incremental history build"
-	(cd "$git_dir"; git rm -qrf --ignore-unmatch * )
-fi
+# Clean the worktree
+(cd "$git_dir"; git rm -qrf --ignore-unmatch * )
 
 git config --file "$versions_file" --get-regexp 'versions\.v.+' | {
 
@@ -78,17 +73,18 @@ git config --file "$versions_file" --get-regexp 'versions\.v.+' | {
 					GIT_DATE=$(date -d @$TIMESTAMP '+%s%z')
 					PRETTY_DATE=$(date -d @$TIMESTAMP -R)
 					echo "Section edited on $PRETTY_DATE by $AUTHOR"
+				elif [ $key = modified ] || [ $key = added ]
+				then
+					if test -z "$DIRECTORY"; then echo "$section.DIRECTORY missing"; exit 2; fi;
+					cp "$versions_dir/$DIRECTORY/$value" -t "$git_dir"
+				elif [ $key = deleted ]
+				then
+					if test -z "$DIRECTORY"; then echo "$section.DIRECTORY missing"; exit 2; fi;
+					rm "$git_dir/$value"
 				elif [ $key = directory ]
 				then
 					DIRECTORY="$value"
-					if $incremental
-					then
-						cp -r "$versions_dir/$DIRECTORY"/* -t "$git_dir"
-					else
-						export GIT_WORK_TREE="$(realpath "$versions_dir/$DIRECTORY")"
-						# Git for Windows will skip files with timestamp with same seconds. Need to delete the old index
-						(cd "$git_dir"; rm $(git rev-parse --git-path index) )
-					fi
+					cp "$versions_dir/$DIRECTORY/index.txt" -t "$git_dir"
 				fi
 			done
 

@@ -464,15 +464,17 @@ class ObjectTreeBuilder:
 		return self.versions
 
 	def _WriteVersionFiles(self, version, directory, prev_directory={}, incremental=False):
+		changed = []
 
-		for guid, file_ctx in version.directory.items():
-			prev_file = prev_directory.get(guid, None)
-			if prev_file is not None \
-				and prev_file is file_ctx:
-				if incremental:
+		for guid, item_ctx in version.directory.items():
+			prev_item = prev_directory.get(guid, None)
+			if prev_item is not None:
+				if prev_item is not item_ctx:
+					changed.append(item_ctx)
+				elif incremental:
 					continue
 
-			file_ctx.MakeFile(directory, guid)
+			item_ctx.MakeFile(directory, guid)
 			continue
 
 		with open(Path(directory, 'index.txt'), 'wt') as pages_file:
@@ -480,7 +482,7 @@ class ObjectTreeBuilder:
 				if item_ctx.IsFile():
 					continue
 				print("%s:%s" % (item_ctx.GetFilename(), item_ctx.GetTitle()), file=pages_file)
-		return
+		return changed
 
 	def MakeVersionFiles(self, directory, options):
 		directory = Path(directory)
@@ -516,12 +518,33 @@ class ObjectTreeBuilder:
 			version_dir = Path(directory, version_str)
 			version_dir.mkdir(exist_ok=True)
 
-			self._WriteVersionFiles(version, version_dir, prev_directory, incremental)
+			changed = self._WriteVersionFiles(version, version_dir, prev_directory, incremental)
 
 			print('[version "v%d"]' % (timestamp), file=versions_file)
 			print('\tAUTHOR =', version.Author, file=versions_file)
 			print('\tTIMESTAMP = %d' % (Filetime64ToUnixTimestamp(timestamp),), file=versions_file)
 			print('\tDIRECTORY =', version_str, file=versions_file)
+
+			def sort_key(rev):
+				return (rev.os_index, rev.page_persistent_guid)
+
+			added = sorted((version.directory[guid] for guid in set(version.directory) - set(prev_directory)),
+							key=sort_key)
+			deleted = sorted((prev_directory[guid] for guid in set(prev_directory) - set(version.directory)),
+							key=sort_key)
+
+			for item_ctx in added:
+				print('\tADDED = %s' + item_ctx.GetFilename(), file=versions_file)
+				continue
+
+			for item_ctx in changed:
+				print('\tMODIFIED = ' + item_ctx.GetFilename(), file=versions_file)
+				continue
+
+			for item_ctx in deleted:
+				print('\tDELETED = ' + item_ctx.GetFilename(), file=versions_file)
+				continue
+
 			print(file=versions_file)
 
 			versions_list.append((timestamp, version_str))
