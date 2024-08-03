@@ -14,8 +14,7 @@
     <Name>py1note</Name>
     <RootNamespace>py1note</RootNamespace>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>
-    </CommandLineArguments>
+    <CommandLineArguments>"C:\Users\agrigoriev\Documents\OneNote Notebooks\Monet\TLV.one" -s -O ../ONE/TLV-J-rev</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterId>Global|PythonCore|3.10</InterpreterId>
   </PropertyGroup>
