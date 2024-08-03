@@ -86,6 +86,7 @@ class RevisionBuilderCtx:
 		self.filename = None
 		self.page_title = 'notitle'
 		self.page_level = None
+		self.page_hash = b''
 
 		# Build all roles
 		for role in self.revision.GetRootObjectRoles():
@@ -97,11 +98,14 @@ class RevisionBuilderCtx:
 				self.last_modified_timestamp = getattr(root_obj, 'LastModifiedTimeStamp', self.last_modified_timestamp)
 				last_modified_by = getattr(root_obj, 'AuthorMostRecent', None)
 				self.last_modified_by = getattr(last_modified_by, 'Author', None)
+				# Not part of page_hash
 			elif role == self.ROOT_ROLE_PAGE_METADATA:
 				self.page_persistent_guid = str(getattr(root_obj, 'NotebookManagementEntityGuid', ""))
 				self.page_title = getattr(root_obj, 'CachedTitleString', self.page_title)
 				self.page_level = getattr(root_obj, 'PageLevel', None)
+				self.page_hash += root_obj.get_hash()
 			elif role == self.ROOT_ROLE_CONTENTS:
+				self.page_hash += root_obj.get_hash()
 				if root_obj._jcid_name == 'jcidSectionNode':
 					self.page_title = 'Section root'
 					# If this is a root page, find the most recent TopologyCreationTimeStamp
@@ -173,6 +177,9 @@ class RevisionBuilderCtx:
 
 	def GetPageLevel(self):
 		return self.page_level
+
+	def GetHash(self):
+		return self.page_hash
 
 	def dump(self, fd, verbose=None):
 		if self.last_modified_timestamp is not None:
@@ -422,7 +429,7 @@ class ObjectTreeBuilder:
 							break
 						del version_tree[ext_guid]
 						continue
-				elif revision_ctx is not prev_revision_ctx:
+				elif revision_ctx.GetHash() != prev_revision_ctx.GetHash():
 					for i in range(1,100):
 						ext_guid = "%s-%d" % (guid, i)
 						if ext_guid not in version_tree:
@@ -443,7 +450,7 @@ class ObjectTreeBuilder:
 				continue
 
 			# Sort in GUID (first item in the tuples) order
-			tree_list = sorted(*version_tree.items())
+			tree_list = sorted((guid, item_ctx.GetHash()) for guid, item_ctx in version_tree.items())
 
 			# See if the previous version_tree is identical
 			if prev_version_tree_list == tree_list:
@@ -476,7 +483,7 @@ class ObjectTreeBuilder:
 		for guid, item_ctx in version.directory.items():
 			prev_item = prev_directory.get(guid, None)
 			if prev_item is not None:
-				if prev_item is not item_ctx:
+				if prev_item.GetHash() != item_ctx.GetHash():
 					changed.append(item_ctx)
 				elif incremental:
 					continue
