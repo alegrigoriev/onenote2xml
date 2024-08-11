@@ -447,8 +447,13 @@ class ObjectTreeBuilder:
 				object_space_data = SimpleNamespace(
 					ctx=object_space_ctx,
 					created=page_metadata.TopologyCreationTimeStamp,
+					title=page_metadata.CachedTitleString,
 					)
 				object_space_tree[object_space_ctx.gosid] = object_space_data
+				print("%sObject Space %s %s" % ('\t' * page_metadata.PageLevel, object_space_data.ctx.gosid, object_space_data.title))
+
+		for object_space_data in sorted(object_space_tree.values(), key=lambda d:d.created):
+			print("Object Space %s created %s" % (object_space_data.ctx.gosid, GetFiletime64Datetime(object_space_data.created)))
 
 		for object_space_ctx in self.object_spaces.values():
 			if object_space_ctx.is_conflict_space:
@@ -482,6 +487,7 @@ class ObjectTreeBuilder:
 				continue
 
 		prev_version_tree_list = []
+		prev_version_tree = {}
 		for timestamp in timestamps:
 			revision_ctx_list:list[RevisionBuilderCtx] = []
 			for object_space_data in object_space_tree.values():
@@ -503,6 +509,7 @@ class ObjectTreeBuilder:
 				continue
 
 			if not revision_ctx_list:
+				print("Empty revision: %s" % (GetFiletime64Datetime(timestamp)))
 				continue
 
 			revision_ctx_list.sort(key=lambda rev: rev.last_modified_timestamp)
@@ -565,11 +572,43 @@ class ObjectTreeBuilder:
 
 				continue
 
+			for guid, item_ctx in version_tree.items():
+				prev_item_ctx = prev_version_tree.get(guid, None)
+				if item_ctx.IsFile():
+					if prev_item_ctx is None:
+						print("Added data file %s" % (guid,))
+						continue
+
+					if item_ctx.GetHash() != prev_item_ctx.GetHash():
+						print("Changed data file %s" % (guid,))
+				else:
+					if prev_item_ctx is None:
+						print("Added %s modified at %s" % (guid, GetFiletime64Datetime(item_ctx.last_modified_timestamp)))
+						continue
+
+					if item_ctx.GetHash() != prev_item_ctx.GetHash():
+						print("Changed %s modified at %s" % (guid, GetFiletime64Datetime(item_ctx.last_modified_timestamp)))
+				del prev_version_tree[guid]
+				continue
+
+			for guid, item_ctx in prev_version_tree.items():
+				if item_ctx.IsFile():
+					print("Deleted data file %s" % (guid,))
+				else:
+					print("Deleted %s modified at %s" % (guid, GetFiletime64Datetime(item_ctx.last_modified_timestamp)))
+				continue
+
+			prev_version_tree = version_tree.copy()
+
 			# Sort in GUID (first item in the tuples) order
 			tree_list = sorted((guid, item_ctx.GetHash()) for guid, item_ctx in version_tree.items())
 
 			# See if the previous version_tree is identical
 			if prev_version_tree_list == tree_list:
+				print("Identical revision %s: version_timestamp: %s" % (
+						GetFiletime64Datetime(timestamp),
+						GetFiletime64Datetime(version_timestamp),
+						))
 				continue
 
 			if rev is None \
@@ -578,6 +617,10 @@ class ObjectTreeBuilder:
 				or (rev.Author is not None \
 					and Author is not None \
 					and rev.Author != Author):
+				print("New rev %s: rev.CreatedTimeStamp: %s" % (
+						GetFiletime64Datetime(timestamp),
+						GetFiletime64Datetime(version_timestamp),
+						))
 				rev = SimpleNamespace(
 									directory=version_tree,
 									CreatedTimeStamp=version_timestamp,
@@ -585,6 +628,10 @@ class ObjectTreeBuilder:
 									)
 				self.versions.append(rev)
 			else:
+				print("Merge %s: version_timestamp: %s" % (
+						GetFiletime64Datetime(timestamp),
+						GetFiletime64Datetime(version_timestamp),
+						))
 				rev.directory = version_tree
 
 			rev.LastModifiedTimeStamp=version_timestamp
