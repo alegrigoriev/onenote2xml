@@ -115,6 +115,7 @@ as separate `.xml` or `.json` files per page in the given directory.
 Each page file is named according to its persistent GUID.
 This option is not applicable to `parse1note.py`, and cannot be used for `.onetoc2` file.
 The directory also contains `index.txt` file, which lists all pages by filename and their titles.
+Lines in the `index.txt` file are indented with TAB characters according to the page level.
 
 	The program gives a warning if the directory exists and not empty.
 

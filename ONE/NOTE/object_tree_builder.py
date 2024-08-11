@@ -85,6 +85,7 @@ class RevisionBuilderCtx:
 		self.page_persistent_guid:GUID = None
 		self.filename = None
 		self.page_title = 'notitle'
+		self.page_level = None
 
 		# Build all roles
 		for role in self.revision.GetRootObjectRoles():
@@ -99,6 +100,7 @@ class RevisionBuilderCtx:
 			elif role == self.ROOT_ROLE_PAGE_METADATA:
 				self.page_persistent_guid = str(getattr(root_obj, 'NotebookManagementEntityGuid', ""))
 				self.page_title = getattr(root_obj, 'CachedTitleString', self.page_title)
+				self.page_level = getattr(root_obj, 'PageLevel', None)
 			elif role == self.ROOT_ROLE_CONTENTS:
 				if root_obj._jcid_name == 'jcidSectionNode':
 					self.page_title = 'Section root'
@@ -169,18 +171,23 @@ class RevisionBuilderCtx:
 	def GetTitle(self):
 		return self.page_title
 
+	def GetPageLevel(self):
+		return self.page_level
+
 	def dump(self, fd, verbose=None):
 		if self.last_modified_timestamp is not None:
-			print("%s (%d): GUID=%s, Author=%s, title=%s" % (
+			print("%s (%d): GUID=%s, Level=%s, Author=%s, title=%s" % (
 				GetFiletime64Datetime(self.last_modified_timestamp),
 				Filetime64ToUnixTimestamp(self.last_modified_timestamp),
 				self.page_persistent_guid,
+				self.page_level,
 				self.last_modified_by,
 				self.page_title,
 				), file=fd)
 		else:
 			print("                                        GUID=%s, Author=%s, title=%s" % (
 				self.page_persistent_guid,
+				self.page_level,
 				self.last_modified_by,
 				self.page_title,
 				), file=fd)
@@ -481,7 +488,7 @@ class ObjectTreeBuilder:
 			for item_ctx in version.directory.values():
 				if item_ctx.IsFile():
 					continue
-				print("%s:%s" % (item_ctx.GetFilename(), item_ctx.GetTitle()), file=pages_file)
+				print("%s%s:%s" % ('\t' * (item_ctx.GetPageLevel()-1), item_ctx.GetFilename(), item_ctx.GetTitle()), file=pages_file)
 		return changed
 
 	def MakeVersionFiles(self, directory, options):
