@@ -337,6 +337,10 @@ class jcidRichTextOENode(PropertySetObject):
 
 	def make_object(self, revision_ctx, property_set:PropertySet):
 		super().make_object(revision_ctx, property_set)
+		TextRunFormattingVerbosity = self.PROPERTIES_VERBOSITY[int(PropertyID.TextRunFormatting)]
+		if revision_ctx.verbosity >= TextRunFormattingVerbosity:
+			self.TextRunsArray = None
+			return self
 
 		RichEditTextUnicode = self.get('RichEditTextUnicode', None)
 		TextExtendedAscii = self.get('TextExtendedAscii', None)
@@ -345,6 +349,8 @@ class jcidRichTextOENode(PropertySetObject):
 		text_run_formatting = iter(getattr(self, 'TextRunFormatting', []))
 		lcid = getattr(self, 'RichEditTextLangID', 1033)
 
+		# By default, do not show this text element
+		self.min_verbosity = TextRunFormattingVerbosity
 		self.TextRunsArray = []
 		prev_index = 0
 		for next_index in *text_run_index, None:
@@ -367,6 +373,9 @@ class jcidRichTextOENode(PropertySetObject):
 			else:
 				break
 
+			if text:
+				# Do not discard this property set, because it has non-empty text
+				self.min_verbosity = 0
 			run_data = next(text_run_data, None)
 			run_formatting = next(text_run_formatting)
 			self.TextRunsArray.append((text, run_formatting, run_data))

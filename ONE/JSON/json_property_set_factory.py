@@ -76,6 +76,8 @@ class jsonRichTextOENode(jsonPropertySetBase):
 	...
 
 	def MakeJsonNode(self, revision_ctx):
+		if self.TextRunsArray is None:
+			return super().MakeJsonNode(revision_ctx)
 
 		content = []
 		for text_run in self.TextRunsArray:

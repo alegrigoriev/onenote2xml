@@ -138,6 +138,9 @@ class xmlRichTextOENode(PropertySetXmlElementBase):
 	def MakeXmlElement(self, revision_ctx):
 		element = super().MakeXmlElement(revision_ctx)
 
+		if self.TextRunsArray is None:
+			return element
+
 		text_runs_element = ET.SubElement(element, 'TextRuns')
 		for text_run in self.TextRunsArray:
 			subelement = ET.SubElement(text_runs_element, 'TextRun')
