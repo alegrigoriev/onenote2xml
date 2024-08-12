@@ -148,7 +148,7 @@ class ArrayOfObjectIDsPropertyObject(PropertyObject):
 		super().update_hash(md5hash)
 		md5hash.update(len(self.value).to_bytes(4, byteorder='little', signed=False))
 		for obj in self.value:
-			if obj is not None:
+			if obj is not None and obj.min_verbosity <= self.min_verbosity:
 				md5hash.update(obj.get_hash())
 		return
 
@@ -207,7 +207,8 @@ class ArrayOfPropertyValuesPropertyObject(PropertyObject):
 		super().update_hash(md5hash)
 		md5hash.update(len(self.value).to_bytes(4, byteorder='little', signed=False))
 		for obj in self.value:
-			md5hash.update(obj.get_hash())
+			if obj.min_verbosity <= self.min_verbosity:
+				md5hash.update(obj.get_hash())
 		return
 
 	def make_object(self, property_set_obj, revision_ctx):

@@ -74,7 +74,8 @@ class PropertySetObject:
 				self.min_verbosity = prop_obj.min_verbosity
 
 			self._properties[prop_obj.key] = prop_obj
-			prop_obj.update_hash(md5hash)
+			if prop_obj.min_verbosity <= revision_ctx.verbosity:
+				prop_obj.update_hash(md5hash)
 			continue
 
 		self.md5 = md5hash.digest()
@@ -352,6 +353,15 @@ class jcidRichTextOENode(PropertySetObject):
 		if revision_ctx.verbosity >= TextRunFormattingVerbosity:
 			self.TextRunsArray = None
 			return self
+
+		# The super-object only hashed attributes not ignored by verbosity level
+		# We heedn to hash the hext here
+		md5hash = md5(self.md5, usedforsecurity=False)
+		for prop_obj in self._properties.values():
+			if prop_obj.min_verbosity == TextRunFormattingVerbosity:
+				prop_obj.update_hash(md5hash)
+			continue
+		self.md5 = md5hash.digest()
 
 		RichEditTextUnicode = self.get('RichEditTextUnicode', None)
 		TextExtendedAscii = self.get('TextExtendedAscii', None)
