@@ -69,6 +69,8 @@ class XmlRevisionBuilderCtx(RevisionBuilderCtx):
 	def AppendXmlElementReference(self, parent_element, propset_obj):
 		if propset_obj is None:
 			return
+		if propset_obj.min_verbosity > self.verbosity:
+			return
 
 		if propset_obj.is_read_only():
 			# Use one from the read-only object cache (per object space)

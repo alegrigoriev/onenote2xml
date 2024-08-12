@@ -65,6 +65,8 @@ class jsonArrayOfObjectIdProperty(jsonPropertyBase):
 			if obj is None:
 				array.append(None)
 				continue
+			if obj.min_verbosity > revision_ctx.verbosity:
+				continue
 
 			value = obj.MakeJsonNode(revision_ctx)
 			if value is not NotImplemented:

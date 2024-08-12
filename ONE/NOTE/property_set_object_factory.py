@@ -24,6 +24,7 @@ class PropertySetObject:
 	JCID = NotImplemented
 	JCID_CLASS = PropertySetJCID
 	from .property_object_factory import OneNotebookPropertyFactory as PROPERTY_FACTORY
+	CHILD_NODES_PROPERTY_ENUM = None
 
 	def __init__(self, jcid, oid):
 		self._jcid:JCID = jcid
@@ -77,6 +78,13 @@ class PropertySetObject:
 			continue
 
 		self.md5 = md5hash.digest()
+
+		if self.CHILD_NODES_PROPERTY_ENUM is not None:
+			ChildNodes = self.get(self.CHILD_NODES_PROPERTY_ENUM.name, None)
+			if ChildNodes is not None:
+				self.min_verbosity = ChildNodes.min_verbosity
+			else:
+				self.min_verbosity = properties_verbosity[self.CHILD_NODES_PROPERTY_ENUM.value]
 
 		return
 
@@ -295,12 +303,15 @@ class jcidPageSeriesNode(PropertySetObject):
 
 class jcidPageNode(PropertySetObject):
 	JCID = PropertySetJCID.jcidPageNode
+	CHILD_NODES_PROPERTY_ENUM = PropertyID.ElementChildNodes
 
 class jcidOutlineNode(PropertySetObject):
 	JCID = PropertySetJCID.jcidOutlineNode
+	CHILD_NODES_PROPERTY_ENUM = PropertyID.ElementChildNodes
 
 class jcidOutlineElementNode(PropertySetObject):
 	JCID = PropertySetJCID.jcidOutlineElementNode
+	CHILD_NODES_PROPERTY_ENUM = PropertyID.ContentChildNodes
 
 class jcidRichTextOENode(PropertySetObject):
 	JCID = PropertySetJCID.jcidRichTextOENode
@@ -432,6 +443,7 @@ class jcidEmbeddedFileNode(PropertySetObject):
 
 class jcidPageManifestNode(PropertySetObject):
 	JCID = PropertySetJCID.jcidPageManifestNode
+	CHILD_NODES_PROPERTY_ENUM = PropertyID.ContentChildNodes
 
 class jcidConflictPageMetaData(PropertySetObject):
 	JCID = PropertySetJCID.jcidConflictPageMetaData

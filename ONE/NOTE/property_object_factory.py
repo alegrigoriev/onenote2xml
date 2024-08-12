@@ -118,11 +118,23 @@ class ArrayOfObjectIDsPropertyObject(PropertyObject):
 
 	def make_object(self, property_set_obj, revision_ctx):
 		self.value = []
+		min_verbosity = None
 		for oid in self.oids:
 			# oid can be None
 			obj = revision_ctx.GetObjectReference(oid)
 			self.value.append(obj)
 			# GetObjectReference returns None for None oid
+			if obj is not None and \
+				(min_verbosity is None or min_verbosity > obj.min_verbosity):
+				# Find lowest verbosity of the child elements
+				min_verbosity = obj.min_verbosity
+
+		if min_verbosity is None:
+			# empty
+			self.min_verbosity = 4
+		elif self.min_verbosity < min_verbosity:
+			# Only increase this attribute min_verbosity level
+			self.min_verbosity = min_verbosity
 		return
 
 	def __iter__(self):
