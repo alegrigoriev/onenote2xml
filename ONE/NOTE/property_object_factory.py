@@ -184,6 +184,13 @@ class ArrayOfContextIDsPropertyObject(PropertyObject):
 		self.ctxids = self.value
 		return
 
+	def make_object(self, property_set_obj, revision_ctx):
+		self.rids = []
+
+		for ctxid in self.ctxids:
+			self.rids.append(revision_ctx.object_space.GetContextRevisionId(ctxid))
+		return
+
 	def update_hash(self, md5hash):
 		super().update_hash(md5hash)
 		md5hash.update(len(self.value).to_bytes(4, byteorder='little', signed=False))

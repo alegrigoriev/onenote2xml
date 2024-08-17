@@ -104,6 +104,12 @@ class jsonArrayOfContextIdProperty(jsonPropertyBase):
 	def MakeJsonValue(self, revision_ctx):
 		array = []
 
+		if revision_ctx.verbosity == 0:
+			for rid in self.rids:
+				array.append(str(rid))
+				continue
+			return array
+
 		for context_id in self.str_value:
 			array.append({ "CTXID" : context_id, })
 		return array

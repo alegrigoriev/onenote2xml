@@ -96,6 +96,12 @@ class xmlArrayOfContextIdProperty(xmlPropertyElementBase):
 	def MakeXmlElement(self, revision_ctx):
 		element = ET.Element(self.key_string)
 
+		if revision_ctx.verbosity == 0:
+			for rid in self.rids:
+				ET.SubElement(element, 'Revision').text = str(rid)
+				continue
+			return element
+
 		for context_id in self.str_value:
 			ET.SubElement(element, 'ContextId', { "CTXID" : context_id, })
 		return element
