@@ -176,7 +176,8 @@ class jsonRevisionMetaData(jsonPropertySetBase):
 	...
 
 class jsonVersionHistoryMetaData(jsonPropertySetBase):
-	...
+	def MakeJsonNode(self, revision_ctx):
+		return NotImplemented
 
 class jsonParagraphStyleObject(jsonPropertySetBase):
 	def MakeJsonNode(self, revision_ctx):
