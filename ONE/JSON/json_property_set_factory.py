@@ -186,7 +186,8 @@ class jsonParagraphStyleObject(jsonPropertySetBase):
 						('Highlight', 'highlight'),
 						):
 			prop = self.get(prop_name, None)
-			if prop is not None:
+			if prop is not None \
+				and prop.min_verbosity == 0:
 				attrs[json_name] = prop.MakeJsonValue(revision_ctx)
 
 		return attrs

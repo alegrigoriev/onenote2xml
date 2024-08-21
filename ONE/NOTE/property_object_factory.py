@@ -400,6 +400,8 @@ class LayoutAlignmentProperty(PropertyObject1To8bytesData):
 		self.display_value = LayoutAlignmentString(int_value)
 		return
 
+from win32api import GetUserDefaultLangID
+DefaultLangID = GetUserDefaultLangID()
 class LanguageIDObject(IntPropertyObject):
 
 	def __init__(self, _property:Property, **kwargs):
@@ -408,7 +410,19 @@ class LanguageIDObject(IntPropertyObject):
 		self.display_value = self.str_value
 		return
 
+	def make_object(self, property_set_obj, revision_ctx):
+		if self.int_value == DefaultLangID:
+			self.min_verbosity = 4
+		return
+
 class RichEditTextLangIDObject(LanguageIDObject): ...
+
+class CharsetObject(IntPropertyObject):
+
+	def make_object(self, property_set_obj, revision_ctx):
+		if self.int_value == 1:  # DEFAULT_CHARSET
+			self.min_verbosity = 4
+		return
 
 OneNotebookPropertyFactoryDict = {
 	int(PropertyID.PageWidth) : FloatPropertyObject,  # 0x14001C01
@@ -476,6 +490,7 @@ OneNotebookPropertyFactoryDict = {
 	int(PropertyID.TaskTagDueDate) : Time32PropertyObject,  # 0x1400346B
 	int(PropertyID.RichEditTextLangID) : RichEditTextLangIDObject,  # 0x10001CFE
 	int(PropertyID.LanguageID) : LanguageIDObject,  # 0x14001C3B
+	int(PropertyID.Charset) : CharsetObject,  # 0x0C001D01
 	int(PropertyID.AudioRecordingGuid): GuidPropertyObject,
 	int(PropertyID.AudioRecordingGuids): GuidArrayPropertyObject,
 	0x1C001C98 : GuidPropertyObject,
