@@ -49,18 +49,25 @@ class XmlRevisionBuilderCtx(RevisionBuilderCtx):
 
 		self.read_only_types_dict = read_only_types_dict
 
-		for role in self.revision_roles:
-			role_tree = self.GetRootObject(role)
-			if role != self.revision.ROOT_ROLE_CONTENTS \
-					and role_tree.min_verbosity > self.verbosity:
+		if self.verbosity < 4:
+			for role in reversed(self.revision_roles):
+				role_tree = self.GetRootObject(role)
+				element = role_tree.MakeXmlElement(self)
+
+				# Below verbosity 4, all roles are appended to the root element
+				if element:
+					revision_element.append(element)
 				continue
+		else:
+			for role in self.revision_roles:
+				role_tree = self.GetRootObject(role)
 
-			root_element = ET.SubElement(revision_element, 'Root',
-									{ 'Role' : str(role)})
+				root_element = ET.SubElement(revision_element, 'Root',
+										{ 'Role' : str(role)})
 
-			element = role_tree.MakeXmlElement(self)
-			root_element.append(element)
-			continue
+				element = role_tree.MakeXmlElement(self)
+				root_element.append(element)
+				continue
 
 		self.read_only_types_dict = None
 
