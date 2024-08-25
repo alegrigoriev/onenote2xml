@@ -55,6 +55,10 @@ python 1note2json.py <OneNote filename> [common options]
 `--output <filename>` (`-O <filename`)
 - the file name to write the XML or JSON file.
 The file will contain the most current revision of all pages stored in the source OneNote file.
+To produce a complete file with all revisions, add `--all-revisions` command line option.
+
+`--all-revisions` (`-A`)
+- include all page revisions to the generated file, not just the most recent versions.
 
 `--include-oids` (`-o`)
 - tag all structures with object IDs (extended GUIDs) in the generated files.

@@ -38,10 +38,30 @@ class JsonObjectSpaceBuilderCtx(ObjectSpaceBuilderCtx):
 	def MakeRootJsonTree(self):
 		return self.root_revision_ctx.MakeJsonTree()
 
+	def MakeAllRevisionsJsonTree(self):
+
+		revisions_dict = {}
+		object_space_dict = {
+			'revisions' : revisions_dict,
+			}
+
+		for revision_ctx in reversed(self.GetRevisions()):
+			# These are only revisions referred by the root or contexts
+			root_tree = revision_ctx.MakeJsonTree()
+			if revision_ctx is self.root_revision_ctx:
+				root_tree['root_revision'] = True
+			revisions_dict[str(revision_ctx.rid)] = root_tree
+			continue
+
+		return object_space_dict
+
 class JsonTreeBuilder(ObjectTreeBuilder):
 	OBJECT_SPACE_BUILDER = JsonObjectSpaceBuilderCtx
 
 	def BuildJsonTree(self, root_tree_name:str, options):
+		if getattr(options, 'all_revisions', False):
+			return self.BuildAllRevisionsJsonTree(root_tree_name)
+
 		pages = {}
 
 		root_dict = {
@@ -54,5 +74,24 @@ class JsonTreeBuilder(ObjectTreeBuilder):
 			if gosid == self.root_gosid:
 				continue
 			pages[str(gosid)] = object_space_ctx.MakeRootJsonTree()
+			continue
+		return root_dict
+
+	def BuildAllRevisionsJsonTree(self, root_tree_name:str):
+		pages = {}
+
+		root_object_space_ctx = self.object_spaces[self.root_gosid]
+		root_page = root_object_space_ctx.MakeJsonTree()
+		root_dict = {
+			'type' : root_tree_name,
+			'pageIndex' : root_page,
+			'pages' : pages,
+			}
+
+		for gosid, object_space_ctx in self.object_spaces.items():
+			# Add nondefault context nodes for non-root object spaces
+			if gosid == self.root_gosid:
+				continue
+			pages[str(gosid)] = object_space_ctx.MakeAllRevisionsJsonTree()
 			continue
 		return root_dict

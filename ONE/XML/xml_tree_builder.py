@@ -106,6 +106,42 @@ class XmlObjectSpaceBuilderCtx(ObjectSpaceBuilderCtx):
 	def GetRootRevisionXmlTree(self, tag):
 		return self.root_revision_ctx.GetRevisionXmlTree(tag)
 
+	def GetAllRevisionsXmlTree(self, tag):
+		# 'self' is object_space_factory_context from object_spaces dictionary
+		# Root object is always role 1 of the NULL context
+		# Other revision root objects are referred by contexts
+		# Child elements:
+		# RootRevision - ID of the root revision (forced first in Revisions)
+		# Revisions - array of revisions (only those referred from the tree and contexts)
+		# Contexts - Maps a context ID to revision ID and revision role (almost always 1)
+
+		object_space_element = ET.Element(tag, {'OSID' : str(self.gosid)})
+
+		revisions_element = ET.SubElement(object_space_element, 'Revisions')
+
+		read_only_types_dict = {}
+
+		for revision_ctx in reversed(self.GetRevisions()):
+			if revision_ctx is self.root_revision_ctx:
+				tag = 'RootRevision'
+			else:
+				tag = 'Revision'
+			element = revision_ctx.GetXmlTree(tag, read_only_types_dict)
+			element.set('RID', str(revision_ctx.rid))
+			revisions_element.append(element)
+			continue
+
+		object_space_element.append(MakeReadonlyXmlTree(read_only_types_dict))
+
+		contexts_element = ET.SubElement(object_space_element, 'Contexts')
+
+		for context_id, revision_id in self.object_space.GetContextLabels():
+			sub_element = ET.SubElement(contexts_element, 'Context', { 'ID' : str(context_id)})
+			sub_element.text = str(revision_id)
+			continue
+
+		return object_space_element
+
 class XmlTreeBuilder(ObjectTreeBuilder):
 	OBJECT_SPACE_BUILDER = XmlObjectSpaceBuilderCtx
 
@@ -113,11 +149,30 @@ class XmlTreeBuilder(ObjectTreeBuilder):
 
 		root_tree = ET.Element(root_tree_name)
 
+		if getattr(options, 'all_revisions', False):
+			return self.BuildAllRevisionsXmlTree(root_tree)
+
 		for gosid, object_space_ctx in self.object_spaces.items():
 			# Add nondefault context nodes for non-root object spaces
 			if gosid == self.root_gosid:
 				continue
 			object_space_tree = object_space_ctx.GetRootRevisionXmlTree('Page')
+			root_tree.append(object_space_tree)
+			continue
+		return root_tree
+
+	def BuildAllRevisionsXmlTree(self, root_tree):
+
+		root_object_space_ctx = self.object_spaces[self.root_gosid]
+
+		root_object_space_tree = root_object_space_ctx.GetAllRevisionsXmlTree('RootObjectSpace')
+		root_tree.append(root_object_space_tree)
+
+		for gosid, object_space_ctx in self.object_spaces.items():
+			# Add nondefault context nodes for non-root object spaces
+			if gosid == self.root_gosid:
+				continue
+			object_space_tree = object_space_ctx.GetAllRevisionsXmlTree('ObjectSpace')
 			root_tree.append(object_space_tree)
 			continue
 		return root_tree
