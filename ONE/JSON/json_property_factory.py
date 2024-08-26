@@ -19,6 +19,7 @@ from ..property_id import *
 from ..STORE.property import Property
 
 class jsonPropertyBase:
+	JSON_KEY = None
 
 	# We'll make this the top __init__ method by using method dictionary
 	def init(self, _property:Property, **kwargs):
@@ -74,6 +75,9 @@ class jsonArrayOfObjectIdProperty(jsonPropertyBase):
 			continue
 
 		return array
+
+class jsonElementChildNodes(jsonArrayOfObjectIdProperty):
+	JSON_KEY = 'content'
 
 class jsonObjectIdProperty(jsonArrayOfObjectIdProperty):
 	def MakeJsonValue(self, revision_ctx):
@@ -202,6 +206,7 @@ OneNootebookPropertyJsonBuilderTemplates = {
 	int(PropertyID.LayoutAlignmentInParent) : jsonLayoutAlignmentProperty,
 	int(PropertyID.LayoutAlignmentSelf) : jsonLayoutAlignmentProperty,
 	int(PropertyID.NoteOnlineParagraphStyle): jsonNoteOnlineParagraphStyleProperty,
+	int(PropertyID.ElementChildNodes) : jsonElementChildNodes,  # 0x1C001C30.
 }
 
 DataTypeObjectJsonFactoryDict = {

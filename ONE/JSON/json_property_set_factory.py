@@ -18,6 +18,7 @@ from ..property_set_jcid import *
 from enum import IntEnum
 
 class jsonPropertySetBase:
+	DOC_TYPE = None
 
 	# We'll make this the top __init__ method by using method dictionary
 	def init(self, jcid, oid):
@@ -31,6 +32,8 @@ class jsonPropertySetBase:
 		obj = {}
 		if revision_ctx.include_oids and self._oid is not None:
 			obj['OID'] = str(self._oid)
+		if self.DOC_TYPE:
+			obj['type'] = self.DOC_TYPE
 
 		for prop in self._properties.values():
 			if prop.min_verbosity > revision_ctx.verbosity:
@@ -51,7 +54,11 @@ class jsonPropertySetBase:
 				from ..exception import OneException
 				raise OneException("Prop %s: objtype %s" % (prop.key_string, objtype.__name__))
 
-			obj[prop.key_string] = subobj
+			if prop.JSON_KEY is not None:
+				key = prop.JSON_KEY
+			else:
+				key = prop.key_string
+			obj[key] = subobj
 			continue
 		return obj
 
@@ -69,22 +76,22 @@ class jsonPersistablePropertyContainerForTOC(jsonPropertySetBase):
 	...
 
 class jsonSectionNode(jsonPropertySetBase):
-	...
+	DOC_TYPE = 'NotebookSection'
 
 class jsonPageSeriesNode(jsonPropertySetBase):
 	...
 
 class jsonPageNode(jsonPropertySetBase):
-	...
+	DOC_TYPE = 'Page'
 
 class jsonOutlineNode(jsonPropertySetBase):
-	...
+	DOC_TYPE = 'content'
 
 class jsonOutlineElementNode(jsonPropertySetBase):
 	...
 
 class jsonRichTextOENode(jsonPropertySetBase):
-	...
+	DOC_TYPE = 'text'
 
 	def MakeJsonNode(self, revision_ctx):
 		if self.TextRunsArray is None:
@@ -122,22 +129,24 @@ class jsonImageNode(jsonPropertySetBase):
 	...
 
 class jsonNumberListNode(jsonPropertySetBase):
+	# TODO: set listItem for the parent
+	# DOC_TYPE = 'listItem'
 	...
 
 class jsonOutlineGroup(jsonPropertySetBase):
 	...
 
 class jsonTableNode(jsonPropertySetBase):
-	...
+	DOC_TYPE = 'table'
 
 class jsonTableRowNode(jsonPropertySetBase):
-	...
+	DOC_TYPE = 'tableRow'
 
 class jsonTableCellNode(jsonPropertySetBase):
-	...
+	DOC_TYPE = 'tableCell'
 
 class jsonTitleNode(jsonPropertySetBase):
-	...
+	DOC_TYPE = 'title'
 
 class jsonPageMetaData(jsonPropertySetBase):
 	...

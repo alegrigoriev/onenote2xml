@@ -13,6 +13,44 @@
 #   limitations under the License.
 #
 
+'''
+
+Section->[PageSeriesNode,...]
+
+PageSeriesNode->[Page ObjectSpace]
+
+Page ObjectSpace->jcidPageManifestNode (content, 1)
+Page ObjectSpace->jcidPageMetaData (metadata, 2)
+Page ObjectSpace->jcidRevisionMetaData (version metadata, 2)
+
+jcidPageMetaData->PageLevel (1...3)
+jcidPageManifestNode->[jcidPageNode, ...]
+jcidPageManifestNode->ChildGraphSpaceElementNodes->[Page ObjectSpace] for conflict pages
+
+jcidPageNode->StructureElementChildNodes->[jcidTitleNode]
+jcidPageNode->ElementChildNodesOfPage->[jcidOutlineNode|jcidImageNode|jcidEmbeddedFileNode]
+
+
+jcidTitleNode->ElementChildNodesOfTitle->[jcidOutlineNode|jcidOutlineGroup]
+
+jcidOutlineNode->ElementChildNodesOfOutline[jcidOutlineGroup|jcidOutlineElementNode]
+
+jcidOutlineElementNode->ElementChildNodesOfOutlineElement->[jcidOutlineGroup|jcidOutlineElementNode]
+jcidOutlineElementNode->ContentChildNodesOfOutlineElement->[jcidRichTextOENode|jcidTableNode|jcidImageNode|jcidEmbeddedFileNode]
+jcidOutlineElementNode->ListNodes->[jcidNumberListNode...]
+
+jcidTableNode->RowCount
+jcidTableNode->ColumnCount
+jcidTableNode->TableColumnWidths[]
+jcidTableNode->ElementChildNodesOfTable->jcidTableRowNode[RowCount]
+
+jcidTableRowNode->ElementChildNodesOfTableRow->jcidTableCellNode[ColumnCount]
+
+jcidTableCellNode->ElementChildNodesOfTableCell->[jcidOutlineElementNode...]     jcidOutlineGroup SHOULD NOT be used
+jcidTableCellNode->OutlineElementChildLevel == 0x01
+
+'''
+
 from ..base_types import *
 from ..NOTE.object_tree_builder import *
 
@@ -69,9 +107,16 @@ class JsonObjectSpaceBuilderCtx(ObjectSpaceBuilderCtx):
 		return self.root_revision_ctx.MakeJsonTree()
 
 	def MakeAllRevisionsJsonTree(self):
+		# 'self' is object_space_factory_context from object_spaces dictionary
+		# Root object is always role 1 of the NULL context
+		# Other revision root objects are referred by contexts
+		# Child elements:
+		# RootRevision - ID of the root revision (forced first in Revisions)
+		# Revisions - array of revisions (only those referred from the tree and contexts)
 
 		revisions_dict = {}
 		object_space_dict = {
+			'type' : 'page',
 			'revisions' : revisions_dict,
 			}
 
@@ -89,6 +134,14 @@ class JsonTreeBuilder(ObjectTreeBuilder):
 	OBJECT_SPACE_BUILDER = JsonObjectSpaceBuilderCtx
 
 	def BuildJsonTree(self, root_tree_name:str, options):
+		'''
+		Since a notebook can contain a collection of pages
+		with nesting, the generated tree is an extension
+		of Atlassian Document Format, with custom 'type' attributes.
+		The tree will be massaged to a collection of Atlassian pages and media
+		upon upload.
+		'''
+
 		if getattr(options, 'all_revisions', False):
 			return self.BuildAllRevisionsJsonTree(root_tree_name)
 
