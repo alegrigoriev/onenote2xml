@@ -400,6 +400,13 @@ class LayoutAlignmentProperty(PropertyObject1To8bytesData):
 		self.display_value = LayoutAlignmentString(int_value)
 		return
 
+class LayoutAlignmentInParentProperty(LayoutAlignmentProperty):
+
+	def make_object(self, property_set_obj, revision_ctx):
+		if hasattr(property_set_obj, 'LayoutAlignmentSelf'):
+			self.min_verbosity = 4
+		return
+
 from win32api import GetUserDefaultLangID
 DefaultLangID = GetUserDefaultLangID()
 class LanguageIDObject(IntPropertyObject):
@@ -441,7 +448,7 @@ OneNotebookPropertyFactoryDict = {
 	# The GUID can be used to construct a hyperlink to a page (section 1.3.2).
 	# It MUST NOT be used to construct a hyperlink to a section (section 1.3.1).
 	int(PropertyID.NotebookManagementEntityGuid) : GuidPropertyObject,  # 0x1C001C30.
-	int(PropertyID.LayoutAlignmentInParent) : LayoutAlignmentProperty,  # 0x14001C3E
+	int(PropertyID.LayoutAlignmentInParent) : LayoutAlignmentInParentProperty,  # 0x14001C3E
 	int(PropertyID.PageMarginTop) : FloatPropertyObject,  # 0x14001C4C
 	int(PropertyID.PageMarginBottom) : FloatPropertyObject,  # 0x14001C4D
 	int(PropertyID.PageMarginLeft) : FloatPropertyObject,  # 0x14001C4E
