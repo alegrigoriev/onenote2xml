@@ -77,6 +77,10 @@ class JsonTreeBuilder(ObjectTreeBuilder):
 		if getattr(options, 'all_revisions', False):
 			return self.BuildAllRevisionsJsonTree(root_tree_name)
 
+		timestamp = getattr(options, 'timestamp', None)
+		if timestamp is not None:
+			return self.BuildRevisionJsonTree(root_tree_name, timestamp)
+
 		pages = {}
 
 		root_dict = {
@@ -90,6 +94,27 @@ class JsonTreeBuilder(ObjectTreeBuilder):
 				continue
 			pages[str(gosid)] = object_space_ctx.MakeRootJsonTree()
 			continue
+		return root_dict
+
+	def BuildRevisionJsonTree(self, root_tree_name, timestamp):
+		version = self.GetVersionByTimestamp(timestamp, upper_bound=True)
+		if version is None:
+			return None
+
+		pages = {}
+		root_dict = {
+			'type' : root_tree_name,
+			'pages' : pages,
+			}
+
+		for guid, item_ctx in version.directory.items():
+
+			if item_ctx.IsFile():
+				... # item_ctx.MakeFile(directory, guid)
+			else:
+				pages[str(guid)] = item_ctx.MakeJsonTree()
+			continue
+
 		return root_dict
 
 	def BuildAllRevisionsJsonTree(self, root_tree_name:str):

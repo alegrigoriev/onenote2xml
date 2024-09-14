@@ -40,6 +40,8 @@ def main():
 						help="List all revisions to the standard output")
 	parser.add_argument("--combine-revisions", '-c', metavar='<minutes>', default=0, type=int, const=600, nargs='?',
 						help="Maximum time span in minutes, to combine revisions to a single one")
+	parser.add_argument("--timestamp", '-T', metavar='<revision-timestamp>', type=int, default=None,
+						help="Generate a snapshot of a revision with this timestamp")
 
 	options = parser.parse_args()
 

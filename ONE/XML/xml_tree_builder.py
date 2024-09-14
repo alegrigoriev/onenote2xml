@@ -173,12 +173,32 @@ class XmlTreeBuilder(ObjectTreeBuilder):
 		if getattr(options, 'all_revisions', False):
 			return self.BuildAllRevisionsXmlTree(root_tree)
 
+		timestamp = getattr(options, 'timestamp', None)
+		if timestamp is not None:
+			return self.BuildRevisionXmlTree(root_tree, timestamp)
+
 		for gosid, object_space_ctx in self.object_spaces.items():
 			# Add nondefault context nodes for non-root object spaces
 			if gosid == self.root_gosid:
 				continue
 			object_space_tree = object_space_ctx.GetRootRevisionXmlTree('Page')
 			root_tree.append(object_space_tree)
+			continue
+		return root_tree
+
+	def BuildRevisionXmlTree(self, root_tree, timestamp):
+		version = self.GetVersionByTimestamp(timestamp, upper_bound=True)
+		if version is None:
+			return None
+
+		for guid, item_ctx in version.directory.items():
+
+			if item_ctx.IsFile():
+				... # item_ctx.MakeFile(directory, guid)
+			else:
+				revision_tree = item_ctx.GetRevisionXmlTree('Page')
+				revision_tree.set('GUID', str(guid))
+				root_tree.append(revision_tree)
 			continue
 		return root_tree
 

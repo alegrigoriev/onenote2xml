@@ -105,3 +105,9 @@ The versions will be saved as separate directories, named with the version times
 
 	If `--all-revisions` command line option is present, the root of the output directory will contain
 `versions.txt` file, which describes all version metadata.
+
+`--timestamp <revision timestamp>` (`-T <timestamp>`)
+- selects a specific revision snapshot to write to the directory specified by `--output-directory` (`-R`),
+or as a single JSON or XML file specified by `--output` (`-O`) option.
+`<revision timestamp>` values can be obtained from the list produced by `--list-revisions` command line option.
+By default, in absence of `--all-revisions` option, the most recent revision snapshot is generated.

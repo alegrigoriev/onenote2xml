@@ -483,7 +483,13 @@ class ObjectTreeBuilder:
 			directory.mkdir(parents=True)
 
 		if not getattr(options, 'all_revisions', False):
-			version = self.GetVersions()[-1]
+			timestamp = getattr(options, 'timestamp', None)
+			if timestamp is not None:
+				version = self.GetVersionByTimestamp(timestamp, upper_bound=True)
+				if version is None:
+					return
+			else:
+				version = self.GetVersions()[-1]
 			return self._WriteVersionFiles(version, directory)
 
 		versions_list = []
@@ -515,3 +521,26 @@ class ObjectTreeBuilder:
 		versions_file.close()
 
 		return
+
+	def GetVersionByTimestamp(self, timestamp, lower_bound=False, upper_bound=False):
+		if upper_bound:
+			# Returns a most recent version with CreatedTimeStamp <= timestamp
+			for ver in reversed(self.GetVersions()):
+				if ver.CreatedTimeStamp <= timestamp:
+					return ver
+				continue
+		elif lower_bound:
+			# Returns a least recent version with CreatedTimeStamp >= timestamp
+			for ver in self.GetVersions():
+				if ver.CreatedTimeStamp >= timestamp:
+					return ver
+				continue
+		else:
+			# Returns a version with CreatedTimeStamp == timestamp
+			for ver in self.GetVersions():
+				if ver.CreatedTimeStamp > timestamp:
+					break
+				if ver.CreatedTimeStamp == timestamp:
+					return ver
+				continue
+		return None
