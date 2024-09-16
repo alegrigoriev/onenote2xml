@@ -26,7 +26,7 @@
     <DebugSymbols>true</DebugSymbols>
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
     <OutputPath>bin\1note2xml\</OutputPath>
-    <CommandLineArguments>"C:\Users\agrigoriev\Documents\OneNote Notebooks\Test\Test Section 1.one" --list-revisions -L ../ONE/Test-2.log</CommandLineArguments>
+    <CommandLineArguments>"C:\Users\agrigoriev\Documents\OneNote Notebooks\Test\Test Section 1.one" -R ../ONE/Test-X-audio-2 -v5</CommandLineArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == '1note2json' ">
     <DebugSymbols>true</DebugSymbols>
