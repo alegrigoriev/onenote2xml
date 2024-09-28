@@ -437,7 +437,18 @@ class ObjectTreeBuilder:
 
 				timestamps |= set(object_space_ctx.GetVersionTimestamps())
 
-				object_space_tree[object_space_ctx.gosid] = object_space_ctx
+				root_revision_ctx = object_space_ctx.GetRootRevision()
+				if root_revision_ctx is None:
+					continue
+
+				page_metadata = root_revision_ctx.GetRootObject(root_revision_ctx.ROOT_ROLE_PAGE_METADATA)
+				# Conflict object spaces are not included in the index
+
+				object_space_data = SimpleNamespace(
+					ctx=object_space_ctx,
+					created=page_metadata.TopologyCreationTimeStamp,
+					)
+				object_space_tree[object_space_ctx.gosid] = object_space_data
 
 		for object_space_ctx in self.object_spaces.values():
 			if object_space_ctx.is_conflict_space:
@@ -446,12 +457,48 @@ class ObjectTreeBuilder:
 
 		timestamps = sorted(timestamps)
 
+		# Build revision lists per NotebookManagementEntityGuid, to find out which duplicate pages can be dropped
+		# Each value is a list of revision_ctx in timestamp order
+		# Key is revision_ctx.page_persistent_guid
+		persistent_guid_dict = {}
+		for timestamp in timestamps:
+			for object_space_data in object_space_tree.values():
+				if timestamp < object_space_data.created:
+					continue
+				revision_ctx = object_space_data.ctx.GetVersionByTimestamp(timestamp)
+				# Check if this revision has conflict pages
+				if revision_ctx is None:
+					continue
+				version_list = persistent_guid_dict.setdefault(revision_ctx.page_persistent_guid, [])
+				# Each item in the list is a list of revision_ctx with same timestamp
+				if not version_list \
+					or version_list[-1][-1].last_modified_timestamp != timestamp:
+					version_list.append([revision_ctx])
+				else:
+					version_list[-1].append(revision_ctx)
+
+				for guid, data_obj in revision_ctx.data_objects.items():
+					persistent_guid_dict[guid] = [[data_obj]]
+				continue
+
 		prev_version_tree_list = []
 		for timestamp in timestamps:
 			revision_ctx_list:list[RevisionBuilderCtx] = []
-			for object_space_ctx in object_space_tree.values():
-				revision_ctx = object_space_ctx.GetVersionByTimestamp(timestamp, upper_bound=True)
+			for object_space_data in object_space_tree.values():
+				revision_ctx = object_space_data.ctx.GetVersionByTimestamp(timestamp, upper_bound=True)
 				if revision_ctx is not None:
+					revision_ctx_list.append(revision_ctx)
+					continue
+
+				if True or timestamp < object_space_data.created:
+					continue
+
+				revision_ctx = object_space_data.ctx.GetVersionByTimestamp(timestamp, lower_bound=True)
+				if revision_ctx is None:
+					continue
+				# Check if the first revision's GUID starts here
+				version_list = persistent_guid_dict[revision_ctx.page_persistent_guid]
+				if revision_ctx.last_modified_timestamp <= version_list[0][0].last_modified_timestamp:
 					revision_ctx_list.append(revision_ctx)
 				continue
 
@@ -466,7 +513,17 @@ class ObjectTreeBuilder:
 			for revision_ctx in revision_ctx_list:
 				guid = revision_ctx.page_persistent_guid
 				if guid not in version_tree:
-					version_tree[guid] = revision_ctx
+					# See if the next revision of this persistent GUID doesn't get moved
+					persistent_guid_history = persistent_guid_dict[guid]
+					# Returns a most recent version with last_modified_timestamp <= timestamp
+					for pages in reversed(persistent_guid_history):
+						if pages[0].last_modified_timestamp <= timestamp:
+							break
+						continue
+					else:
+						pages = None
+					if True or pages is None or pages[0].last_modified_timestamp == timestamp:
+						version_tree[guid] = revision_ctx
 					continue
 
 				prev_revision_ctx = version_tree[guid]
