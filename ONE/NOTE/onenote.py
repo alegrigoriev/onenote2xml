@@ -80,6 +80,27 @@ class OneNote:
 		return XmlTreeBuilder(self.onestore,
 							self.GetXmlPropertySetFactory(), options=options)
 
+	def GetJsonBuilder(self, options):
+		from ..JSON.json_tree_builder import JsonTreeBuilder
+
+		return JsonTreeBuilder(self.onestore,
+							self.GetJsonPropertySetFactory(), options=options)
+
+	def MakeJsonFile(self, filename, options=None):
+		obj_tree = self.MakeJsonTree(options)
+		import json
+
+		with open(filename, 'wt') as file:
+			json.dump(obj_tree, file, indent='\t')
+		return
+
+	def MakeJsonTree(self, options):
+		json_builder = self.GetJsonBuilder(options)
+		if self.log_file is not None:
+			json_builder.dump(self.log_file, options.verbose)
+		root = json_builder.BuildJsonTree(self.ROOT_NODE_NAME, options)
+		return root
+
 	def dump(self, fd, verbose=None):
 		self.onestore.dump(fd, verbose)
 		return
@@ -109,6 +130,10 @@ class OneNotebookSection(OneNote):
 		from ..XML.property_set_element_factory import OneNotebookXmlPropertySetFactory as property_set_element_factory
 		return property_set_element_factory
 
+	def GetJsonPropertySetFactory(self):
+		from ..JSON.json_property_set_factory import OneNotebookJsonPropertySetFactory as property_set_factory
+		return property_set_factory
+
 class OneNotebookToc2(OneNote):
 	ROOT_NODE_NAME = "NotebookToc2"
 
@@ -127,3 +152,7 @@ class OneNotebookToc2(OneNote):
 	def GetXmlPropertySetFactory(self):
 		from ..XML.property_set_element_factory import OneToc2XmlPropertySetFactory as property_set_element_factory
 		return property_set_element_factory
+
+	def GetJsonPropertySetFactory(self):
+		from ..JSON.json_property_set_factory import OneToc2JsonPropertySetFactory as property_set_factory
+		return property_set_factory

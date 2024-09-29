@@ -6,6 +6,7 @@
     <ProjectHome>.</ProjectHome>
     <StartupFile Condition=" '$(Configuration)' == 'parse1note' ">parse1note.py</StartupFile>
     <StartupFile Condition=" '$(Configuration)' == '1note2xml' ">1note2xml.py</StartupFile>
+    <StartupFile Condition=" '$(Configuration)' == '1note2json' ">1note2json.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -27,7 +28,13 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
     <OutputPath>bin\1note2xml\</OutputPath>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == '1note2json' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+    <OutputPath>bin\1note2json\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
+    <Compile Include="1note2json.py" />
     <Compile Include="1note2xml.py" />
     <Compile Include="parse1note.py" />
     <Compile Include="ONE\JSON\json_property_factory.py" />

@@ -17,6 +17,8 @@ The following command line applications are provided:
 
 [1note2xml.py](#1note2xml) command line application generates an XML file from the provided OneNote section or notebook file.
 
+[1note2json.py](#1note2json) command line application generates a JSON file from the provided OneNote section or notebook file.
+
 ### `parse1note.py`{#parse1note}
 
 `parse1note.py` application is invoked with the following command line:
@@ -38,10 +40,18 @@ The following option is specific to `parse1note.py` only:
 python 1note2xml.py <OneNote filename> [common options]
 ```
 
+### `1note2json.py`{#1note2json}
+
+[1note2json.py](1note2json.py) application is invoked with the following command line:
+
+```
+python 1note2json.py <OneNote filename> [common options]
+```
+
 ### Common options
 
 `--log <log filename>` (`-L <log filename>`) options gives the file name to write the parser log.
 
 `--output <filename>` (`-O <filename`)
-- the file name to write the XML file.
+- the file name to write the XML or JSON file.
 The file will contain the most current revision of all pages stored in the source OneNote file.

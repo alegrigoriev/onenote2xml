@@ -4,3 +4,4 @@
 *.md	text whitespace=-trailing-space
 *.editorconfig text
 *.xml	text eol=lf
+*.json	text

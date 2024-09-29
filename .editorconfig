@@ -19,6 +19,12 @@ tab_width = 2
 insert_final_newline = false
 end_of_line = lf
 
+[*.json]
+indent_style = tab
+indent_size = 2
+tab_width = 2
+insert_final_newline = false
+
 [*.pyproj]
 # The project save trims the final newline
 insert_final_newline = false
