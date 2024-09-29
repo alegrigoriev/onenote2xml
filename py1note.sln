@@ -7,9 +7,11 @@ Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "py1note", "py1note.pyproj",
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		1note2xml|Any CPU = 1note2xml|Any CPU
 		parse1note|Any CPU = parse1note|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7BBD1F14-7A89-442B-991B-F63C8EA992DC}.1note2xml|Any CPU.ActiveCfg = 1note2xml|Any CPU
 		{7BBD1F14-7A89-442B-991B-F63C8EA992DC}.parse1note|Any CPU.ActiveCfg = parse1note|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution

@@ -4,7 +4,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>7bbd1f14-7a89-442b-991b-f63c8ea992dc</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>parse1note.py</StartupFile>
+    <StartupFile Condition=" '$(Configuration)' == 'parse1note' ">parse1note.py</StartupFile>
+    <StartupFile Condition=" '$(Configuration)' == '1note2xml' ">1note2xml.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -21,7 +22,13 @@
     <DebugSymbols>true</DebugSymbols>
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == '1note2xml' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+    <OutputPath>bin\1note2xml\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
+    <Compile Include="1note2xml.py" />
     <Compile Include="parse1note.py" />
     <Compile Include="ONE\NOTE\onenote.py" />
     <Compile Include="ONE\base_types.py" />

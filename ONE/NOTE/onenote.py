@@ -17,6 +17,7 @@ from __future__ import annotations
 from ..base_types import *
 
 class OneNote:
+	ROOT_NODE_NAME = None
 
 	def __init__(self, onestore=None, filename=None, options=None, log_file=None):
 		self.onestore = onestore
@@ -53,6 +54,32 @@ class OneNote:
 			builder.dump(self.log_file, self.options.verbose)
 		return builder
 
+	def MakeXmlFile(self, filename, options):
+		from xml.etree import ElementTree as ET
+		xml_tree = self.MakeXmlTree(options)
+
+		element_tree = ET.ElementTree(xml_tree)
+		ET.indent(element_tree, '  ')
+		with open(filename, 'wb') as file:  # element_tree.write does its own encoding
+			element_tree.write(file,
+						# Use default 'ascii' encoding to encode extended characters as escape sequences
+						encoding='ascii',
+						xml_declaration=True,
+						short_empty_elements=getattr(options, 'short_empty_elements', True))
+		return
+
+	def MakeXmlTree(self, options):
+		xml_builder = self.GetXmlBuilder(options)
+		if self.log_file is not None:
+			xml_builder.dump(self.log_file, self.options.verbose)
+		return xml_builder.BuildXmlTree(self.ROOT_NODE_NAME, options)
+
+	def GetXmlBuilder(self, options=None):
+		from ..XML.xml_tree_builder import XmlTreeBuilder
+
+		return XmlTreeBuilder(self.onestore,
+							self.GetXmlPropertySetFactory(), options=options)
+
 	def dump(self, fd, verbose=None):
 		self.onestore.dump(fd, verbose)
 		return
@@ -64,6 +91,7 @@ class OneNote:
 		return self.onestore.IsNotebookToc2()
 
 class OneNotebookSection(OneNote):
+	ROOT_NODE_NAME = "NotebookSection"
 
 	def IsNotebookSection(self):
 		assert (self.onestore.IsNotebookSection())
@@ -77,7 +105,12 @@ class OneNotebookSection(OneNote):
 		from .property_set_object_factory import OneNotebookPropertySetFactory as property_set_factory
 		return property_set_factory
 
+	def GetXmlPropertySetFactory(self):
+		from ..XML.property_set_element_factory import OneNotebookXmlPropertySetFactory as property_set_element_factory
+		return property_set_element_factory
+
 class OneNotebookToc2(OneNote):
+	ROOT_NODE_NAME = "NotebookToc2"
 
 	def IsNotebookSection(self):
 		assert (not self.onestore.IsNotebookSection())
@@ -90,3 +123,7 @@ class OneNotebookToc2(OneNote):
 	def GetPropertySetFactory(self):
 		from .property_set_object_factory import OneToc2PropertySetFactory as property_set_factory
 		return property_set_factory
+
+	def GetXmlPropertySetFactory(self):
+		from ..XML.property_set_element_factory import OneToc2XmlPropertySetFactory as property_set_element_factory
+		return property_set_element_factory
