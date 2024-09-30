@@ -87,6 +87,8 @@ class RevisionBuilderCtx:
 		self.page_title = 'notitle'
 		self.page_level = None
 		self.page_hash = b''
+		self.conflict_author = None
+		self.conflicts = {}
 
 		# Build all roles
 		for role in self.revision.GetRootObjectRoles():
@@ -95,7 +97,8 @@ class RevisionBuilderCtx:
 			self.revision_roles[role] = root_obj
 
 			if role == self.ROOT_ROLE_REVISION_METADATA:
-				self.last_modified_timestamp = getattr(root_obj, 'LastModifiedTimeStamp', self.last_modified_timestamp)
+				if not self.conflict_author:
+					self.last_modified_timestamp = getattr(root_obj, 'LastModifiedTimeStamp', self.last_modified_timestamp)
 				last_modified_by = getattr(root_obj, 'AuthorMostRecent', None)
 				self.last_modified_by = getattr(last_modified_by, 'Author', None)
 				# Not part of page_hash
@@ -104,6 +107,11 @@ class RevisionBuilderCtx:
 				self.page_title = getattr(root_obj, 'CachedTitleString', self.page_title)
 				self.page_level = getattr(root_obj, 'PageLevel', None)
 				self.page_hash += root_obj.get_hash()
+				self.has_conflict_pages = getattr(root_obj, 'HasConflictPages', False)
+				self.conflict_author = getattr(root_obj, 'ConflictingUserName', None)
+				if self.conflict_author:
+					# For conflict pages, an actual usable timestamp is in TopologyCreationTimeStamp
+					self.last_modified_timestamp = getattr(root_obj, 'TopologyCreationTimeStamp', self.last_modified_timestamp)
 			elif role == self.ROOT_ROLE_CONTENTS:
 				self.page_hash += root_obj.get_hash()
 				if root_obj._jcid_name == 'jcidSectionNode':
@@ -113,6 +121,23 @@ class RevisionBuilderCtx:
 						topology_creation_timestamps = GetTopologyCreationTimeStamps(root_obj)
 						if topology_creation_timestamps:
 							self.last_modified_timestamp = topology_creation_timestamps[0].TopologyCreationTimeStamp
+
+				ChildGraphSpaceElementNodes = getattr(root_obj, 'ChildGraphSpaceElementNodes', None)
+				if not ChildGraphSpaceElementNodes:
+					continue
+				# The metadata object OID is made from OSID in ChildGraphSpaceElementNodes by XOR with GUID
+				# { 0x22a8c031, 0x3600, 0x42ee, { 0xb7, 0x14, 0xd7, 0xac, 0xda, 0x24, 0x35, 0xe8 } },
+				# or {22a8c031-3600-42ee-b714-d7acda2435e8}.
+				seed_guid = ExGUID(b'\x31\xC0\xA8\x22\x00\x36\xEE\x42\xb7\x14\xD7\xAC\xDA\x24\x35\xE8', 0)
+				metadata_objects = {}
+				MetaDataObjectsAboveGraphSpace = getattr(root_obj, 'MetaDataObjectsAboveGraphSpace', ())
+				for metadata_obj in MetaDataObjectsAboveGraphSpace:
+					metadata_objects[metadata_obj._oid ^ seed_guid] = metadata_obj
+					continue
+
+				for conflict_space in ChildGraphSpaceElementNodes:
+					self.conflicts[conflict_space] = metadata_objects.get(conflict_space, None)
+					continue
 			continue
 
 		return
@@ -182,13 +207,24 @@ class RevisionBuilderCtx:
 		return self.page_hash
 
 	def dump(self, fd, verbose=None):
-		if self.last_modified_timestamp is not None:
+		if self.conflict_author:
+			print("%s (%d): GUID=%s, Level=%s, Author=%s, ConflictAuthor=%s, title=%s" % (
+				GetFiletime64Datetime(self.last_modified_timestamp),
+				Filetime64ToUnixTimestamp(self.last_modified_timestamp),
+				self.page_persistent_guid,
+				self.page_level,
+				self.last_modified_by,
+				self.conflict_author,
+				self.page_title,
+				), file=fd)
+		elif self.last_modified_timestamp is not None:
 			print("%s (%d): GUID=%s, Level=%s, Author=%s, title=%s" % (
 				GetFiletime64Datetime(self.last_modified_timestamp),
 				Filetime64ToUnixTimestamp(self.last_modified_timestamp),
 				self.page_persistent_guid,
 				self.page_level,
 				self.last_modified_by,
+				self.conflict_author,
 				self.page_title,
 				), file=fd)
 		else:
@@ -198,6 +234,10 @@ class RevisionBuilderCtx:
 				self.last_modified_by,
 				self.page_title,
 				), file=fd)
+
+		for gosid, metadata in self.conflicts.items():
+			print("\tConflict page GOSID=%s GUID=%s author=%s" %
+					(gosid, metadata.NotebookManagementEntityGuid,metadata.ConflictingUserName), file=fd)
 		return
 
 class ObjectSpaceBuilderCtx:
@@ -220,6 +260,7 @@ class ObjectSpaceBuilderCtx:
 		self.revisions = {}  # All revisions, including meta-revisions
 		self.versions = [] # Sorted in ascending order of timestamp
 		self.version_timestamps = []
+		self.is_conflict_space = False
 
 		revisions = {}
 		for rid in object_space.GetRevisionIds():
@@ -261,6 +302,8 @@ class ObjectSpaceBuilderCtx:
 
 			self.versions.append(revision_ctx)
 			self.version_timestamps.append(revision_ctx.last_modified_timestamp)
+			if revision_ctx.conflict_author:
+				self.is_conflict_space = True
 			continue
 
 		return
@@ -298,7 +341,7 @@ class ObjectSpaceBuilderCtx:
 		return self.root_revision_ctx
 
 	def dump(self, fd, verbose=None):
-		print("\nObject Space %s" % (self.gosid,), file=fd)
+		print("\nObject Space %s%s" % (self.gosid, " CONFLICT" if self.is_conflict_space else ""), file=fd)
 		#for revision in self.revisions.values():
 		for revision in self.revisions.values():
 			revision.dump(fd, verbose)
@@ -390,10 +433,16 @@ class ObjectTreeBuilder:
 				object_space_ctx = self.object_spaces.get(object_space_id, None)
 				if object_space_ctx is None:
 					continue
+				assert(not object_space_ctx.is_conflict_space)
 
 				timestamps |= set(object_space_ctx.GetVersionTimestamps())
 
 				object_space_tree[object_space_ctx.gosid] = object_space_ctx
+
+		for object_space_ctx in self.object_spaces.values():
+			if object_space_ctx.is_conflict_space:
+				timestamps |= set(object_space_ctx.GetVersionTimestamps())
+			continue
 
 		timestamps = sorted(timestamps)
 
@@ -444,6 +493,16 @@ class ObjectTreeBuilder:
 			version_tree = {}
 			for guid, revision_ctx in sorted_version_tree:
 				version_tree[guid] = revision_ctx
+
+				# Add conflict pages
+				for gosid in revision_ctx.conflicts:
+					obj_space_ctx = self.object_spaces[gosid]
+					conflict_ctx = obj_space_ctx.GetVersionByTimestamp(revision_ctx.last_modified_timestamp, upper_bound=True)
+					if conflict_ctx is not None:
+						ext_guid = "%s-conflict-%s" % (guid, conflict_ctx.page_persistent_guid)
+						version_tree[ext_guid] = conflict_ctx
+					continue
+
 				for guid, data_obj in revision_ctx.data_objects.items():
 					version_tree[guid] = data_obj
 

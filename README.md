@@ -117,6 +117,8 @@ This option is not applicable to `parse1note.py`, and cannot be used for `.oneto
 The directory also contains `index.txt` file, which lists all pages by filename and their titles.
 Lines in the `index.txt` file are indented with TAB characters according to the page level.
 
+	Conflict pages will be generated as separate files.
+
 	The program gives a warning if the directory exists and not empty.
 
 	By default, only the most recent version is written.
